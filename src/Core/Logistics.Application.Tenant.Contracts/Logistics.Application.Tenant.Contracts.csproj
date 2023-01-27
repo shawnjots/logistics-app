@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net7.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Logistics.Application.Tenant</RootNamespace>
+    <LangVersion>11</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Logistics.Application.Shared.Contracts\Logistics.Application.Shared.Contracts.csproj" />
+    <ProjectReference Include="..\Logistics.Domain.Shared\Logistics.Domain.Shared.csproj" />
+  </ItemGroup>
+
+</Project>
