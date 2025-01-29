@@ -32,10 +32,10 @@
 	<array>
 		<dict>
 			<key>CFBundleURLName</key>
-			<string>JFleets Driver URL</string>
+			<string>Clensonic Driver URL</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>jfleets-driver</string>
+				<string>clensonic-driver</string>
 			</array>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>

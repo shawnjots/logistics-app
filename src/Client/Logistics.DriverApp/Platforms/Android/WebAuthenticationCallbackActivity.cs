@@ -10,5 +10,5 @@ namespace Logistics.DriverApp.Platforms.Android;
               DataScheme = CALLBACK_SCHEME)]
 public class WebAuthenticationCallbackActivity : WebAuthenticatorCallbackActivity
 {
-    const string CALLBACK_SCHEME = "jfleets-driver";
+    const string CALLBACK_SCHEME = "clensonic-driver";
 }

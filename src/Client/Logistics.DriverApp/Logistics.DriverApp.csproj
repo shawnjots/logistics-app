@@ -11,10 +11,10 @@
 		<Nullable>enable</Nullable>
 
 		<!-- Display name -->
-		<ApplicationTitle>JFleets Driver</ApplicationTitle>
+		<ApplicationTitle>Clensonic Driver</ApplicationTitle>
 
 		<!-- App Identifier -->
-		<ApplicationId>com.jfleets.driver</ApplicationId>
+		<ApplicationId>com.clensonic.driver</ApplicationId>
 
 		<!-- Versions -->
 		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
