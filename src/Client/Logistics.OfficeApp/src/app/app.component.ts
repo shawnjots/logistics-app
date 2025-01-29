@@ -1,5 +1,4 @@
 import {Component, OnInit} from "@angular/core";
-import {NgIf} from "@angular/common";
 import {Router, RouterOutlet} from "@angular/router";
 import {ToastModule} from "primeng/toast";
 import {AuthService} from "@/core/auth";
@@ -10,7 +9,7 @@ import {BreadcrumbComponent, SidebarComponent} from "@/components/layout";
   templateUrl: "./app.component.html",
   styleUrls: ["./app.component.scss"],
   standalone: true,
-  imports: [NgIf, BreadcrumbComponent, ToastModule, RouterOutlet, SidebarComponent],
+  imports: [BreadcrumbComponent, ToastModule, RouterOutlet, SidebarComponent],
 })
 export class AppComponent implements OnInit {
   isAuthenticated: boolean;
@@ -23,7 +22,9 @@ export class AppComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authService.checkAuth().subscribe((isAuthenticated) => (this.isAuthenticated = isAuthenticated));
+    this.authService
+      .checkAuth()
+      .subscribe((isAuthenticated) => (this.isAuthenticated = isAuthenticated));
     this.authService.onAuthenticated().subscribe((result) => (this.isAuthenticated = result));
     // this.printPath('', this.router.config);
   }

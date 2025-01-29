@@ -1,5 +1,5 @@
 import {Component, OnInit} from "@angular/core";
-import {NgIf, CurrencyPipe} from "@angular/common";
+import {CurrencyPipe} from "@angular/common";
 import {RouterLink} from "@angular/router";
 import {ChartModule} from "primeng/chart";
 import {SkeletonModule} from "primeng/skeleton";
@@ -28,7 +28,6 @@ import {NotificationsPanelComponent} from "./components";
     RouterLink,
     TooltipModule,
     ButtonModule,
-    NgIf,
     SkeletonModule,
     ChartModule,
     CurrencyPipe,
@@ -59,7 +58,7 @@ export class HomeComponent implements OnInit {
           data: [],
         },
       ],
-    },
+    };
     this.chartOptions = {
       plugins: {
         legend: {

@@ -38,10 +38,10 @@ export class EditPaymentComponent implements OnInit {
   public readonly paymentStatuses = PaymentStatusEnum.toArray();
   public readonly paymentMethods = PaymentMethodEnum.toArray();
   public readonly paymentForValues = PaymentForEnum.toArray();
-  public title = signal("Edit payment");
-  public id = input<string>("");
-  public isLoading = signal(false);
-  public form: FormGroup<PaymentForm>;
+  public readonly title = signal("Edit payment");
+  public readonly id = input<string>("");
+  public readonly isLoading = signal(false);
+  public readonly form: FormGroup<PaymentForm>;
 
   constructor(
     private readonly apiService: ApiService,
@@ -58,7 +58,10 @@ export class EditPaymentComponent implements OnInit {
         validators: Validators.compose([Validators.required, Validators.min(0.01)]),
         nonNullable: true,
       }),
-      paymentFor: new FormControl<PaymentFor>(PaymentFor.Payroll, {validators: Validators.required, nonNullable: true}),
+      paymentFor: new FormControl<PaymentFor>(PaymentFor.Payroll, {
+        validators: Validators.required,
+        nonNullable: true,
+      }),
       paymentStatus: new FormControl<PaymentStatus>(PaymentStatus.Pending, {
         validators: Validators.required,
         nonNullable: true,

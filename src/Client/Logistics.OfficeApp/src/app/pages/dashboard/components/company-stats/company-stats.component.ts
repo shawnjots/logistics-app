@@ -3,7 +3,6 @@ import {CommonModule, CurrencyPipe} from "@angular/common";
 import {CompanyStatsDto} from "@/core/models";
 import {ApiService} from "@/core/services";
 import {Converters} from "@/core/utils";
-import {DistanceUnitPipe} from "@/core/pipes";
 import {SharedModule} from "primeng/api";
 import {CardModule} from "primeng/card";
 import {ChartModule} from "primeng/chart";
@@ -16,7 +15,6 @@ import {SkeletonModule} from "primeng/skeleton";
   styleUrls: [],
   imports: [
     CommonModule,
-    DistanceUnitPipe,
     CurrencyPipe,
     CardModule,
     CommonModule,

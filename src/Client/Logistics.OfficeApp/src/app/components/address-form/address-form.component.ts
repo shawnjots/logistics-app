@@ -1,5 +1,5 @@
 import {CommonModule} from "@angular/common";
-import {Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges, forwardRef} from "@angular/core";
+import {Component, forwardRef, input, output} from "@angular/core";
 import {
   ControlValueAccessor,
   FormControl,
@@ -25,12 +25,12 @@ import {ValidationSummaryComponent} from "../validation-summary/validation-summa
   ],
 })
 export class AddressFormComponent implements ControlValueAccessor {
-  public form: FormGroup<AddressForm>;
+  public readonly form: FormGroup<AddressForm>;
   private onTouched?: () => void;
   private onChanged?: (value: AddressDto | null) => void;
 
-  @Input() address?: AddressDto;
-  @Output() addressChange = new EventEmitter<AddressDto | null>();
+  public readonly address = input<AddressDto>();
+  readonly addressChange = output<AddressDto | null>();
 
   constructor() {
     this.form = new FormGroup<AddressForm>({
@@ -43,7 +43,13 @@ export class AddressFormComponent implements ControlValueAccessor {
     });
 
     this.form.valueChanges.subscribe((values) => {
-      if (!values.addressLine1 || !values.city || !values.region || !values.zipCode || !values.country) {
+      if (
+        !values.addressLine1 ||
+        !values.city ||
+        !values.region ||
+        !values.zipCode ||
+        !values.country
+      ) {
         return;
       }
 
@@ -92,8 +98,7 @@ export class AddressFormComponent implements ControlValueAccessor {
   setDisabledState(isDisabled: boolean): void {
     if (isDisabled) {
       this.form.disable();
-    }
-    else {
+    } else {
       this.form.enable();
     }
   }
