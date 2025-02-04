@@ -58,7 +58,9 @@ public partial class EditTenant : PageBase
             var success = await CallApiAsync(api => api.UpdateTenantAsync(new UpdateTenant
             {
                 Id = _tenant.Id,
-                CompanyName = _tenant.CompanyName
+                CompanyName = _tenant.CompanyName,
+                Name = _tenant.Name,
+                CompanyAddress = _tenant.CompanyAddress
             }));
 
             if (!success)

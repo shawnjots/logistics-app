@@ -2,7 +2,8 @@
 
 	<PropertyGroup>
 		<TargetFrameworks>net9.0-ios;net9.0-android</TargetFrameworks>
-<!--	<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net7.0-windows10.0.19041.0</TargetFrameworks>-->
+		<!-- <RuntimeIdentifiers>ios-arm64</RuntimeIdentifiers> -->
+<!--	<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0</TargetFrameworks>-->
 		<OutputType>Exe</OutputType>
 		<RootNamespace>Logistics.DriverApp</RootNamespace>
 		<UseMaui>true</UseMaui>

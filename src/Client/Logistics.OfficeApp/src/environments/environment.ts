@@ -5,7 +5,7 @@
 export const environment = {
   production: false,
   mapboxToken:
-    "pk.eyJ1Ijoic3V4cm9iZ20iLCJhIjoiY2w0dmsyMGd1MDEzZDNjcXcwZGRtY255MSJ9.XwGTNZx_httMhW0Fu34udQ",
+    "pk.eyJ1Ijoibnlhc2hhLXp3IiwiYSI6ImNtNnE2em56ODFiaGMybW83bzg4ZXlmaDcifQ.yEcN5LreFLmuFxhYMR6CnQ",
   apiHost: "https://localhost:7000",
   idHost: "https://localhost:7001",
   // idHost: 'https://id.clensonic.org'

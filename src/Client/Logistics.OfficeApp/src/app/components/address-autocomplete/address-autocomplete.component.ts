@@ -29,7 +29,7 @@ export class AddressAutocompleteComponent implements ControlValueAccessor, OnIni
   public readonly accessToken = input.required<string>();
   public readonly field = input("");
   public readonly placeholder = input("Type address...");
-  public readonly country = input("us");
+  public readonly country = input("zw");
   public readonly forceSelection = input(false);
   public readonly address = model<AddressDto | null>(null);
   public readonly addressChange = output<AddressDto>();
