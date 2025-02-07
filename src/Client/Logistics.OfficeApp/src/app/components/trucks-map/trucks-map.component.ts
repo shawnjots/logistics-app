@@ -17,6 +17,8 @@ export class TrucksMapComponent implements OnInit, OnDestroy {
   public readonly accessToken = input.required<string>();
   @Input() width: string;
   @Input() height: string;
+  @Input() center: [number, number] = [29, -19]; // Coordinates for Zimbabwe
+  @Input() zoom: number = 6; // Adjust zoom level as needed
 
   constructor(
     private apiService: ApiService,

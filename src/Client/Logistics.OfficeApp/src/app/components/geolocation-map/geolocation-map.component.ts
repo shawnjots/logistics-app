@@ -16,15 +16,13 @@ export class GeolocationMapComponent {
 
   public readonly accessToken = input.required<string>();
   @Input() geolocationData: TruckGeolocationDto[];
-  @Input() zoom: number;
-  @Input() center: [number, number];
+  @Input() zoom: number = 6; // Default zoom level for Zimbabwe
+  @Input() center: [number, number] = [29, -19]; // Coordinates for Zimbabwe
   @Input() width: string;
   @Input() height: string;
 
   constructor() {
     this.geolocationData = [];
-    this.zoom = 3;
-    this.center = [-95, 35];
     this.width = "100%";
     this.height = "100%";
   }
