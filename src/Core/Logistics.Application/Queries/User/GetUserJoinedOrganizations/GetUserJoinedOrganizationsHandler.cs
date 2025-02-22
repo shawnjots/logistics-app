@@ -1,7 +1,6 @@
 ﻿using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Shared.Models;
-using Logistics.Shared;
 
 namespace Logistics.Application.Queries;
 
@@ -26,8 +25,7 @@ internal sealed class GetUserJoinedOrganizationsHandler :
             return Result<OrganizationDto[]>.Fail($"Could not find an user with ID '{req.UserId}'");
         }
 
-        var tenantsIds = user.GetJoinedTenantIds();
-        var organizations = await _masterUow.Repository<Tenant>().GetListAsync(i => tenantsIds.Contains(i.Id));
+        var organizations = await _masterUow.Repository<Tenant>().GetListAsync(i => i.Id == user.TenantId);
 
         var organizationsDto = organizations
             .Select(i => new OrganizationDto

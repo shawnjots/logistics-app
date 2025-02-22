@@ -20,4 +20,8 @@
     <ProjectReference Include="..\..\Core\Logistics.Infrastructure.EF\Logistics.Infrastructure.EF.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="keys\" />
+  </ItemGroup>
+
 </Project>

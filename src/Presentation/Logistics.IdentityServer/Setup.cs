@@ -4,9 +4,12 @@ using Duende.IdentityServer;
 using Serilog;
 using Logistics.Application;
 using Logistics.Domain.Entities;
-using Logistics.IdentityServer.Extensions;
 using Logistics.Infrastructure.EF;
 using Logistics.IdentityServer.Services;
+using Logistics.Infrastructure.EF.Builder;
+using Logistics.Infrastructure.EF.Data;
+using Microsoft.AspNetCore.DataProtection;
+using Serilog.Extensions.Logging;
 
 namespace Logistics.IdentityServer;
 
@@ -14,11 +17,19 @@ internal static class Setup
 {
     public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
     {
-        builder.Services.AddRazorPages();
-        builder.Services.AddApplicationLayer(builder.Configuration);
-
-        builder.Services.AddInfrastructureLayer(builder.Configuration)
-            .ConfigureIdentity(identityBuilder =>
+        var services = builder.Services;
+        var configuration = builder.Configuration;
+        
+        var microsoftLogger = new SerilogLoggerFactory(Log.Logger)
+            .CreateLogger<IInfrastructureBuilder>();
+        
+        services.AddRazorPages();
+        services.AddApplicationLayer(configuration);
+        services.AddInfrastructureLayer(configuration)
+            .UseLogger(microsoftLogger)
+            .AddMasterDatabase()
+            .AddTenantDatabase()
+            .AddIdentity(identityBuilder =>
             {
                 identityBuilder
                     .AddSignInManager()
@@ -26,10 +37,12 @@ internal static class Setup
                     .AddDefaultTokenProviders();
             });
         
-        AddAuthSchemes(builder.Services);
+        AddAuthSchemes(services);
+        
+        services.AddDataProtection()
+            .PersistKeysToDbContext<MasterDbContext>();
 
-        builder.Services
-            .AddIdentityServer(options =>
+        services.AddIdentityServer(options =>
             {
                 options.Events.RaiseErrorEvents = true;
                 options.Events.RaiseInformationEvents = true;
@@ -42,10 +55,10 @@ internal static class Setup
             .AddInMemoryIdentityResources(Config.IdentityResources())
             .AddInMemoryApiScopes(Config.ApiScopes())
             .AddInMemoryApiResources(Config.ApiResources())
-            .AddInMemoryClients(Config.Clients(builder.Configuration))
+            .AddInMemoryClients(Config.Clients(configuration))
             .AddAspNetIdentity<User>();
 
-        builder.Services.AddAuthentication()
+        services.AddAuthentication()
             .AddGoogle(options =>
             {
                 options.SignInScheme = IdentityServerConstants.ExternalCookieAuthenticationScheme;
@@ -57,7 +70,7 @@ internal static class Setup
                 options.ClientSecret = "copy client secret from Google here";
             });
         
-        builder.Services.AddCors(options =>
+        services.AddCors(options =>
         {
             options.AddPolicy("DefaultCors", cors =>
             {
@@ -88,8 +101,8 @@ internal static class Setup
         {
             app.UseDeveloperExceptionPage();
         }
-
-        app.UseLetsEncryptChallenge();
+        
+        app.UseHttpsRedirection();
         app.UseStaticFiles();
         app.UseRouting();
         app.UseCors(app.Environment.IsDevelopment() ? "AnyCors" : "DefaultCors");
@@ -111,6 +124,9 @@ internal static class Setup
         .AddCookie(IdentityConstants.ApplicationScheme, o =>
         {
             o.LoginPath = new PathString("/Account/Login");
+            o.Cookie.SameSite = SameSiteMode.None;
+            o.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+            o.Cookie.HttpOnly = true;
             o.Events = new CookieAuthenticationEvents()
             {
                 OnValidatePrincipal = SecurityStampValidator.ValidatePrincipalAsync

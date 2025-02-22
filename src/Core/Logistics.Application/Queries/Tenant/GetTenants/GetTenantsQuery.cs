@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using Logistics.Shared;
 using Logistics.Shared.Models;
 using MediatR;
 

@@ -1,5 +1,4 @@
 ﻿using Logistics.Shared.Models;
-using Logistics.Shared;
 using MediatR;
 
 namespace Logistics.Application.Queries;

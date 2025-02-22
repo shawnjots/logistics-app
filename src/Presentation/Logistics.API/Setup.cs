@@ -1,20 +1,22 @@
 ﻿using System.Text;
 using Hangfire;
+using Hangfire.PostgreSql;
 using Logistics.API.Authorization;
-using Logistics.API.Extensions;
-using Logistics.API.Hubs;
 using Logistics.API.Jobs;
 using Logistics.API.Middlewares;
-using Logistics.API.Services;
 using Logistics.Application;
-using Logistics.Application.Services;
+using Logistics.Application.Hubs;
 using Logistics.Infrastructure.EF;
-using Logistics.Shared;
+using Logistics.Infrastructure.EF.Builder;
+using Logistics.Shared.Models;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Authorization;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
+using Microsoft.IdentityModel.Tokens;
 using Serilog;
+using Serilog.Extensions.Logging;
 
 namespace Logistics.API;
 
@@ -23,39 +25,48 @@ internal static class Setup
     public static WebApplication ConfigureServices(this WebApplicationBuilder builder)
     {
         var services = builder.Services;
-        services.AddApplicationLayer(builder.Configuration);
-        services.AddInfrastructureLayer(builder.Configuration);
+        var configuration = builder.Configuration;
+        
+        var microsoftLogger = new SerilogLoggerFactory(Log.Logger)
+            .CreateLogger<IInfrastructureBuilder>();
+        
+        services.AddApplicationLayer(configuration);
+        services.AddInfrastructureLayer(configuration)
+            .UseLogger(microsoftLogger)
+            .AddMasterDatabase()
+            .AddTenantDatabase()
+            .AddIdentity();
+        
         services.AddHttpContextAccessor();
         services.AddAuthorization();
         services.AddEndpointsApiExplorer();
         services.AddSwaggerGen();
-        services.AddSignalR();
         
         services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
-        services.AddSingleton<LiveTrackingHubContext>();
         services.AddScoped<IAuthorizationHandler, PermissionHandler>();
-        services.AddScoped<INotificationService, NotificationService>();
         
         services.AddHangfireServer();
-        services.AddHangfire(configuration => configuration
+        services.AddHangfire(config => config
             .SetDataCompatibilityLevel(CompatibilityLevel.Version_180)
             .UseSimpleAssemblyNameTypeSerializer()
             .UseRecommendedSerializerSettings()
-            .UseSqlServerStorage(builder.Configuration.GetConnectionString("MasterDatabase")));
-
-        builder.Services.AddAuthentication("Bearer")
-            .AddJwtBearer("Bearer", options =>
+            .UsePostgreSqlStorage(c =>
+                c.UseNpgsqlConnection(configuration.GetConnectionString("MasterDatabase"))));
+        
+        services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
             {
-                builder.Configuration.Bind("IdentityServer", options);
-                options.TokenValidationParameters.ValidateAudience = true;
-                options.TokenValidationParameters.ValidateIssuer = true;
-#if DEBUG
-                options.TokenValidationParameters.ValidateAudience = false;
-                options.TokenValidationParameters.ValidateIssuer = false;
-#endif
+                configuration.Bind("IdentityServer", options);
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateAudience = true,
+                    ValidateIssuer = true,
+                    ValidIssuer = configuration["IdentityServer:Authority"],
+                    ValidAudience = configuration["IdentityServer:Audience"],
+                };
             });
 
-        builder.Services.AddControllers(configure =>
+        services.AddControllers(configure =>
         {
             var policy = new AuthorizationPolicyBuilder()
                             .RequireAuthenticatedUser()
@@ -69,7 +80,7 @@ internal static class Setup
                 new BadRequestObjectResult(Result.Fail(GetModelStateErrors(context.ModelState)));
         });
         
-        builder.Services.AddCors(options =>
+        services.AddCors(options =>
         {
             options.AddPolicy("DefaultCors", cors =>
             {
@@ -99,10 +110,8 @@ internal static class Setup
             app.UseSwagger();
             app.UseSwaggerUI();
         }
-
-        app.UseLetsEncryptChallenge();
+        
         app.UseHttpsRedirection();
-
         app.UseCors(app.Environment.IsDevelopment() ? "AnyCors" : "DefaultCors");
 
         app.UseAuthentication();
@@ -111,6 +120,8 @@ internal static class Setup
 
         app.UseCustomExceptionHandler();
         app.MapControllers();
+        
+        // SignalR Hubs
         app.MapHub<LiveTrackingHub>("/hubs/live-tracking");
         app.MapHub<NotificationHub>("/hubs/notification");
         return app;

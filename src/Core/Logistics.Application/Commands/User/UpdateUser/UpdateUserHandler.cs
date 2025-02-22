@@ -1,7 +1,6 @@
-﻿using Logistics.Application;
-using Logistics.Domain.Entities;
+﻿using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Shared;
+using Logistics.Shared.Models;
 
 namespace Logistics.Application.Commands;
 
@@ -42,12 +41,10 @@ internal sealed class UpdateUserHandler : RequestHandler<UpdateUserCommand, Resu
         {
             user.PhoneNumber = req.PhoneNumber;
         }
-
-        var tenantIds = user.GetJoinedTenantIds();
-
-        foreach (var tenantId in tenantIds)
+        
+        if (!string.IsNullOrEmpty(req.TenantId))
         {
-            await UpdateTenantEmployeeDataAsync(tenantId, user);
+            await UpdateTenantEmployeeDataAsync(req.TenantId, user);
         }
         
         _masterUow.Repository<User>().Update(user);

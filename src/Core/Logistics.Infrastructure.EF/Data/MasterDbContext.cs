@@ -2,24 +2,30 @@
 using Logistics.Infrastructure.EF.Helpers;
 using Logistics.Infrastructure.EF.Interceptors;
 using Logistics.Infrastructure.EF.Options;
-using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace Logistics.Infrastructure.EF.Data;
 
-public class MasterDbContext : IdentityDbContext<User, AppRole, string>
+public class MasterDbContext : IdentityDbContext<User, AppRole, string>, IDataProtectionKeyContext
 {
     private readonly DispatchDomainEventsInterceptor? _dispatchDomainEventsInterceptor;
     private readonly string _connectionString;
+    private readonly ILogger<MasterDbContext>? _logger;
 
     public MasterDbContext(
         MasterDbContextOptions options,
-        DispatchDomainEventsInterceptor? dispatchDomainEventsInterceptor)
+        DispatchDomainEventsInterceptor? dispatchDomainEventsInterceptor = null,
+        ILogger<MasterDbContext>? logger = null)
     {
         _dispatchDomainEventsInterceptor = dispatchDomainEventsInterceptor;
         _connectionString = options.ConnectionString ?? ConnectionStrings.LocalMaster;
+        _logger = logger;
     }
+    
+    public DbSet<DataProtectionKey> DataProtectionKeys { get; set; }
 
     protected override void OnConfiguring(DbContextOptionsBuilder options)
     {
@@ -30,7 +36,8 @@ public class MasterDbContext : IdentityDbContext<User, AppRole, string>
 
         if (!options.IsConfigured)
         {
-            DbContextHelpers.ConfigureSqlServer(_connectionString, options);
+            DbContextHelpers.ConfigurePostgreSql(_connectionString, options);
+            _logger?.LogInformation("Configured master database with connection string: {ConnectionString}", _connectionString);
         }
     }
 
@@ -38,6 +45,14 @@ public class MasterDbContext : IdentityDbContext<User, AppRole, string>
     {
         base.OnModelCreating(builder);
         builder.Entity<Tenant>().ToTable("Tenants");
+
+        builder.Entity<User>(entity =>
+        {
+            entity.HasOne(i => i.Tenant)
+                .WithMany(i => i.Users)
+                .HasForeignKey(i => i.TenantId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
         
         builder.Entity<SubscriptionPayment>(entity =>
         {

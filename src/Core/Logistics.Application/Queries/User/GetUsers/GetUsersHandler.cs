@@ -1,10 +1,8 @@
-﻿using Logistics.Application;
-using Logistics.Domain.Entities;
+﻿using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Domain.Specifications;
 using Logistics.Mappings;
 using Logistics.Shared.Models;
-using Logistics.Shared;
 
 namespace Logistics.Application.Queries;
 
