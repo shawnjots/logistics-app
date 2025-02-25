@@ -1,4 +1,4 @@
-﻿using IdentityModel.OidcClient;
+﻿using Duende.IdentityModel.OidcClient;
 using Logistics.DriverApp.Extensions;
 using Logistics.DriverApp.Services;
 using Logistics.DriverApp.Services.Authentication;
@@ -39,9 +39,8 @@ public static class Setup
         services.AddScoped<StatsPageViewModel>();
         services.AddScoped<LoadPageViewModel>();
         services.AddScoped<PastLoadsPageViewModel>();
-        services.AddScoped<ChangeOrganizationPageViewModel>();
         
-        services.AddScoped<IdentityModel.OidcClient.Browser.IBrowser, WebBrowserAuthenticator>();
+        services.AddScoped<Duende.IdentityModel.OidcClient.Browser.IBrowser, WebBrowserAuthenticator>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ILoadProximityUpdater, LoadProximityUpdater>();
         services.AddScoped<ILocationTracker, LocationTracker>();

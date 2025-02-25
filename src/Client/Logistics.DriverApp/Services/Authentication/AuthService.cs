@@ -1,10 +1,10 @@
 ﻿using System.IdentityModel.Tokens.Jwt;
-using IdentityModel.OidcClient;
 using System.Security.Claims;
-using IdentityModel;
+using Duende.IdentityModel;
+using Duende.IdentityModel.OidcClient;
 using Logistics.Shared.Consts.Claims;
-using IBrowser = IdentityModel.OidcClient.Browser.IBrowser;
-using Result = IdentityModel.OidcClient.Result;
+using IBrowser = Duende.IdentityModel.OidcClient.Browser.IBrowser;
+using Result = Duende.IdentityModel.OidcClient.Result;
 
 namespace Logistics.DriverApp.Services.Authentication;
 
@@ -21,8 +21,13 @@ public class AuthService : IAuthService
 #if DEBUG
         options.HttpClientFactory = (_) => new System.Net.Http.HttpClient(InsecureHttpsClient.GetPlatformMessageHandler());
 #endif
-        _oidcClient = new OidcClient(options);
-        _oidcClient.Options.Browser = browser;
+        _oidcClient = new OidcClient(options)
+        {
+            Options =
+            {
+                Browser = browser
+            }
+        };
         _tokenStorage = tokenStorage;
         Options = options;
     }
@@ -33,7 +38,7 @@ public class AuthService : IAuthService
     public async Task<bool> CanAutoLoginAsync()
     {
         var tokenInfo = await _tokenStorage.GetTokenAsync();
-        return tokenInfo != null;
+        return tokenInfo is not null;
     }
 
     public async Task<AuthResult> LoginAsync()
@@ -135,7 +140,7 @@ public class AuthService : IAuthService
                     userIdentity.Permissions.Add(claim.Value);
                     break;
                 case CustomClaimTypes.Tenant:
-                    userIdentity.TenantIds.Add(claim.Value);
+                    userIdentity.TenantId = claim.Value;
                     break;
             }
         }
@@ -144,7 +149,7 @@ public class AuthService : IAuthService
     
     private static bool IsAccessTokenExpired(TokenInfo? tokenInfo)
     {
-        if (tokenInfo == null)
+        if (tokenInfo is null)
             return false;
             
         var accessTokenExpiration = tokenInfo.AccessTokenExpiration;
