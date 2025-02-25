@@ -2,6 +2,6 @@
 
 internal static class ConnectionStrings
 {
-    public const string LocalDefaultTenant = "Server=102.37.17.93; Database=default_logistics; Uid=LogisticsUser; Pwd=*rgn*ygc#; TrustServerCertificate=true";
-    public const string LocalMaster = "Server=102.37.17.93; Database=master_logistics; Uid=LogisticsUser; Pwd=*rgn*ygc#; TrustServerCertificate=true";
+    public const string LocalDefaultTenant = "Host=102.37.17.93; Port=5432; Database=default_logistics; Username=LogisticsUser; Password=*rgn*ygc#;";
+    public const string LocalMaster = "Host=102.37.17.93; Port=5432; Database=master_logistics; Username=LogisticsUser; Password=*rgn*ygc#;";
 }
