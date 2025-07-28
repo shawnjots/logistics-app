@@ -362,3 +362,7 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+src/Presentation/Logistics.IdentityServer/appsettings.json
+src/Presentation/Logistics.API/appsettings.json
+src/Presentation/Logistics.DbMigrator/appsettings.json
+src/Core/Logistics.Infrastructure.EF/ConnectionStrings.cs

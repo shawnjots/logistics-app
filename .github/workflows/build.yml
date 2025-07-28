@@ -2,9 +2,9 @@ name: Build
 
 on:
   push:
-    branches: ["main"]
+    branches: ["prime"]
   pull_request:
-    branches: ["main"]
+    branches: ["prime"]
 
 env:
   PRESENTATION_PROJECTS_DIR: ./src/Presentation
