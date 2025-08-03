@@ -10,7 +10,6 @@
   background-size: 256px 556px;
   display: flex;
   flex-direction: column;
-  padding-top: 0.5rem;
   height: 100vh;
   top: 0;
   left: 0;
@@ -18,39 +17,12 @@
 }
 
 .sidebar.minimized {
-  width: 80px;
+  width: 70px;
 }
 
 .nav-link {
   border-radius: 0;
-  color: black;
+  color: var(--p-neutral-800);
   display: flex;
   align-items: center;
-}
-
-:host ::ng-deep {
-  .p-panelmenu-header-content {
-    background-color: transparent;
-    border-top: unset;
-  }
-
-  .p-menuitem-link {
-    text-decoration: none;
-  }
-
-  .p-panelmenu-header chevronrighticon {
-    order: 2;
-  }
-
-  .p-panelmenu-content {
-    background-color: transparent;
-  }
-
-  .p-panelmenu-header chevrondownicon {
-    order: 2;
-  }
-
-  .p-panelmenu-header .p-menuitem-text {
-    order: 1;
-  }
 }

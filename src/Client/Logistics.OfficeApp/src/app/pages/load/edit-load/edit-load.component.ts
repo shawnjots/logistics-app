@@ -1,20 +1,15 @@
-import {Component, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
-import {FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {Component, OnInit} from "@angular/core";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {ActivatedRoute, Router, RouterLink} from "@angular/router";
 import {ConfirmationService} from "primeng/api";
+import {AutoCompleteModule} from "primeng/autocomplete";
+import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {ConfirmDialogModule} from "primeng/confirmdialog";
-import {ToastModule} from "primeng/toast";
-import {ButtonModule} from "primeng/button";
-import {DropdownModule} from "primeng/dropdown";
-import {AutoCompleteModule} from "primeng/autocomplete";
 import {ProgressSpinnerModule} from "primeng/progressspinner";
-import {globalConfig} from "@/configs";
-import {EnumType, LoadStatus, LoadStatusEnum} from "@/core/enums";
-import {AddressDto, CustomerDto, UpdateLoadCommand} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
-import {Converters} from "@/core/utils";
+import {SelectModule} from "primeng/select";
+import {ToastModule} from "primeng/toast";
 import {
   AddressAutocompleteComponent,
   DirectionsMapComponent,
@@ -22,8 +17,19 @@ import {
   SelectedAddressEvent,
   ValidationSummaryComponent,
 } from "@/components";
-import {TruckData, TruckHelper} from "../shared";
+import {globalConfig} from "@/configs";
+import {ApiService} from "@/core/api";
+import {
+  AddressDto,
+  CustomerDto,
+  LoadStatus,
+  UpdateLoadCommand,
+  loadStatusOptions,
+} from "@/core/api/models";
+import {ToastService} from "@/core/services";
+import {Converters} from "@/core/utilities";
 import {SearchCustomerComponent, SearchTruckComponent} from "../components";
+import {TruckData, TruckHelper} from "../shared";
 
 @Component({
   selector: "app-edit-load",
@@ -39,7 +45,6 @@ import {SearchCustomerComponent, SearchTruckComponent} from "../components";
     FormsModule,
     ReactiveFormsModule,
     AutoCompleteModule,
-    DropdownModule,
     ButtonModule,
     RouterLink,
     AddressAutocompleteComponent,
@@ -47,8 +52,8 @@ import {SearchCustomerComponent, SearchTruckComponent} from "../components";
     SearchCustomerComponent,
     SearchTruckComponent,
     ValidationSummaryComponent,
+    SelectModule,
   ],
-  providers: [ConfirmationService],
 })
 export class EditLoadComponent implements OnInit {
   public readonly accessToken = globalConfig.mapboxToken;
@@ -57,7 +62,7 @@ export class EditLoadComponent implements OnInit {
   public loadRefId!: number;
   public isLoading = false;
   public form: FormGroup<EditLoadForm>;
-  public loadStatuses = LoadStatusEnum.toArray();
+  public loadStatuses = loadStatusOptions;
   public originCoords: [number, number] | null = null;
   public destinationCoords: [number, number] | null = null;
 
@@ -80,7 +85,7 @@ export class EditLoadComponent implements OnInit {
         {value: 0, disabled: true},
         {validators: Validators.required, nonNullable: true}
       ),
-      status: new FormControl(LoadStatusEnum.getValue(LoadStatus.Dispatched), {
+      status: new FormControl(LoadStatus.Dispatched, {
         validators: Validators.required,
         nonNullable: true,
       }),
@@ -156,7 +161,7 @@ export class EditLoadComponent implements OnInit {
       assignedDispatcherId: this.form.value.assignedDispatcherId!,
       assignedTruckId: this.form.value.assignedTruck!.truckId,
       customerId: this.form.value.customer?.id,
-      status: this.form.value.status?.value as LoadStatus,
+      status: this.form.value.status,
     };
 
     this.apiService.updateLoad(command).subscribe((result) => {
@@ -199,7 +204,7 @@ export class EditLoadComponent implements OnInit {
         dstCoords: [load.destinationAddressLong, load.destinationAddressLat],
         deliveryCost: load.deliveryCost,
         distance: Converters.metersTo(load.distance, "mi"),
-        status: LoadStatusEnum.getValue(load.status),
+        status: load.status,
         assignedDispatcherId: load.assignedDispatcherId,
         assignedDispatcherName: load.assignedDispatcherName,
         assignedTruck: {
@@ -235,7 +240,7 @@ interface EditLoadForm {
   dstCoords: FormControl<[number, number]>;
   deliveryCost: FormControl<number>;
   distance: FormControl<number>;
-  status: FormControl<EnumType>;
+  status: FormControl<LoadStatus>;
   assignedTruck: FormControl<TruckData | null>;
   assignedDispatcherId: FormControl<string>;
   assignedDispatcherName: FormControl<string>;

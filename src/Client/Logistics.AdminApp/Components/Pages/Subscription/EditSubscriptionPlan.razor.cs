@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Components;
 
 namespace Logistics.AdminApp.Components.Pages.Subscription;
 
-public partial class EditSubscriptionPlan
+public partial class EditSubscriptionPlan : PageBase
 {
     private SubscriptionPlanDto _subscriptionPlan = new();
     
@@ -22,7 +22,7 @@ public partial class EditSubscriptionPlan
     #region Injectable services
 
     [Inject] 
-    private NavigationManager Navigation { get; set; } = default!;
+    private NavigationManager Navigation { get; set; } = null!;
 
     #endregion
     
@@ -34,55 +34,53 @@ public partial class EditSubscriptionPlan
             return;
         }
         
-        IsLoading = true;
         var subscriptionPlan = await CallApiAsync(api => api.GetSubscriptionPlanAsync(Id!));
 
         if (subscriptionPlan is not null)
         {
             _subscriptionPlan = subscriptionPlan;
         }
-
-        IsLoading = false;
     }
 
-    private async Task SubmitAsync()
+    private async Task SubmitAsync(SubscriptionPlanDto model)
     {
-        IsLoading = true;
-        
         if (EditMode)
         {
             var success = await CallApiAsync(api => api.UpdateSubscriptionPlanAsync(new UpdateSubscriptionPlan
             {
-                Id = _subscriptionPlan.Id,
-                Name = _subscriptionPlan.Name,
-                Description = _subscriptionPlan.Description,
-                Price = _subscriptionPlan.Price,
+                Id = model.Id,
+                Name = model.Name,
+                Description = model.Description,
+                Price = model.Price,
+                TrialPeriod = model.TrialPeriod,
+                Interval = model.Interval,
+                IntervalCount = model.IntervalCount
             }));
 
-            if (!success)
+            if (success)
             {
-                return;
+                ShowNotification("The subscription plan has been saved successfully");
             }
-            
-            ShowNotification("The subscription plan has been saved successfully");
         }
         else
         {
             var success = await CallApiAsync(api => api.CreateSubscriptionPlanAsync(new CreateSubscriptionPlan
             {
-                Name = _subscriptionPlan.Name,
-                Description = _subscriptionPlan.Description,
-                Price = _subscriptionPlan.Price
+                Name = model.Name,
+                Description = model.Description,
+                Price = model.Price,
+                TrialPeriod = model.TrialPeriod,
+                Interval = model.Interval,
+                IntervalCount = model.IntervalCount
             }));
 
             if (success)
             {
                 ShowNotification("A new subscription plan has been created successfully");
                 ResetData();
+                Navigation.NavigateTo("/subscription-plans");
             }
         }
-
-        IsLoading = false;
     }
 
     private void ResetData()

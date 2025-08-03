@@ -5,7 +5,7 @@ using Logistics.Infrastructure.EF.Data;
 
 namespace Logistics.Infrastructure.EF.Persistence;
 
-public class MasterUnitOfWork : IMasterUnityOfWork
+internal class MasterUnitOfWork : IMasterUnityOfWork
 {
     private readonly MasterDbContext _masterDbContext;
     private readonly Hashtable _repositories = new();
@@ -15,22 +15,30 @@ public class MasterUnitOfWork : IMasterUnityOfWork
         _masterDbContext = masterDbContext;
     }
 
-    public IMasterRepository<TEntity> Repository<TEntity>() where TEntity : class, IEntity<string>
+    public IMasterRepository<TEntity, string> Repository<TEntity>() 
+        where TEntity : class, IEntity<string>
+    {
+        return Repository<TEntity, string>();
+    }
+
+    public IMasterRepository<TEntity, TKey> Repository<TEntity, TKey>() 
+        where TEntity : class, IEntity<TKey>
     {
         var type = typeof(TEntity).Name;
 
         if (!_repositories.ContainsKey(type))
         {
-            var repositoryType = typeof(MasterRepository<>);
+            var repositoryType = typeof(MasterRepository<,>);
 
             var repositoryInstance =
                 Activator.CreateInstance(repositoryType
-                    .MakeGenericType(typeof(TEntity)), _masterDbContext);
+                    .MakeGenericType(typeof(TEntity), typeof(TKey)), 
+                    _masterDbContext);
 
             _repositories.Add(type, repositoryInstance);
         }
 
-        if (_repositories[type] is not MasterRepository<TEntity> repository)
+        if (_repositories[type] is not MasterRepository<TEntity, TKey> repository)
         {
             throw new InvalidOperationException("Could not create a master repository");
         }

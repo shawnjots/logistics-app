@@ -21,11 +21,13 @@ public class TenantsController : ControllerBase
         _mediator = mediator;
     }
 
+    #region Tenants
+
     [HttpGet("{identifier}")]
     [ProducesResponseType(typeof(Result<TenantDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result), StatusCodes.Status400BadRequest)]
     [Authorize]
-    public async Task<IActionResult> GetById(string identifier)
+    public async Task<IActionResult> GetTenantById(string identifier)
     {
         var includeConnectionString = HttpContext.User.HasOneTheseRoles(AppRoles.SuperAdmin, AppRoles.Admin);
         var result = await _mediator.Send(new GetTenantQuery
@@ -42,7 +44,7 @@ public class TenantsController : ControllerBase
     [ProducesResponseType(typeof(PagedResult<LoadDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = Permissions.Tenants.View)]
-    public async Task<IActionResult> GetList([FromQuery] GetTenantsQuery query)
+    public async Task<IActionResult> GetTenantList([FromQuery] GetTenantsQuery query)
     {
         if (User.HasOneTheseRoles(AppRoles.SuperAdmin, AppRoles.Admin))
         {
@@ -57,7 +59,7 @@ public class TenantsController : ControllerBase
     [ProducesResponseType(typeof(Result), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = Permissions.Tenants.Create)]
-    public async Task<IActionResult> Create([FromBody] CreateTenantCommand request)
+    public async Task<IActionResult> CreateTenant([FromBody] CreateTenantCommand request)
     {
         var result = await _mediator.Send(request);
         return result.Success ? Ok(result) : BadRequest(result);
@@ -67,7 +69,7 @@ public class TenantsController : ControllerBase
     [ProducesResponseType(typeof(Result), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = Permissions.Tenants.Edit)]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateTenantCommand request)
+    public async Task<IActionResult> UpdateTenant(string id, [FromBody] UpdateTenantCommand request)
     {
         request.Id = id;
         var result = await _mediator.Send(request);
@@ -78,9 +80,11 @@ public class TenantsController : ControllerBase
     [ProducesResponseType(typeof(Result), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(Result), StatusCodes.Status400BadRequest)]
     [Authorize(Policy = Permissions.Tenants.Delete)]
-    public async Task<IActionResult> Delete(string id)
+    public async Task<IActionResult> DeleteTenant(string id)
     {
         var result = await _mediator.Send(new DeleteTenantCommand {Id = id});
         return result.Success ? Ok(result) : BadRequest(result);
     }
+
+    #endregion
 }

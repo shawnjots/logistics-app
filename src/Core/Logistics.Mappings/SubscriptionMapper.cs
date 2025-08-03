@@ -13,10 +13,25 @@ public static class SubscriptionMapper
             Status = entity.Status,
             StartDate = entity.StartDate,
             EndDate = entity.EndDate,
-            NextPaymentDate = entity.NextPaymentDate,
+            NextBillingDate = entity.NextBillingDate,
             TrialEndDate = entity.TrialEndDate,
-            Tenant = entity.Tenant.ToDto(),
+            Tenant = GetTenantDto(entity.Tenant),
             Plan = entity.Plan.ToDto(),
+            StripeSubscriptionId = entity.StripeSubscriptionId,
+            StripeCustomerId = entity.StripeCustomerId,
+        };
+    }
+
+    private static TenantDto GetTenantDto(Tenant entity)
+    {
+        return new TenantDto
+        {
+            Id = entity.Id,
+            Name = entity.Name,
+            CompanyName = entity.CompanyName,
+            BillingEmail = entity.BillingEmail,
+            DotNumber = entity.DotNumber,
+            CompanyAddress = entity.CompanyAddress.ToDto(),
         };
     }
 }

@@ -5,16 +5,20 @@ namespace Logistics.Mappings;
 
 public static class TenantMapper
 {
-    public static TenantDto ToDto(this Tenant entity, bool includeConnectionString = false)
+    public static TenantDto ToDto(this Tenant entity, bool includeConnectionString = false, int? employeeCount = null)
     {
         return new TenantDto
         {
             Id = entity.Id,
             Name = entity.Name,
             CompanyName = entity.CompanyName,
+            BillingEmail = entity.BillingEmail,
+            DotNumber = entity.DotNumber,
             CompanyAddress = entity.CompanyAddress.ToDto(),
             ConnectionString = includeConnectionString ? entity.ConnectionString : null,
-            Subscription = includeConnectionString ? entity.Subscription?.ToDto() : null
+            StripeCustomerId = entity.StripeCustomerId,
+            Subscription = entity.Subscription?.ToDto(),
+            EmployeeCount = employeeCount,
         };
     }
 }

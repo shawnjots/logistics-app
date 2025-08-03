@@ -1,11 +1,11 @@
-import {Component, Input, OnInit, input, output} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, Input, OnInit, input, output} from "@angular/core";
 import {CardModule} from "primeng/card";
 import {ChartModule} from "primeng/chart";
 import {SkeletonModule} from "primeng/skeleton";
-import {MonthlyGrossesDto} from "@/core/models";
-import {DateUtils, Converters} from "@/core/utils";
-import {ApiService} from "@/core/services";
+import {ApiService} from "@/core/api";
+import {MonthlyGrossesDto} from "@/core/api/models";
+import {Converters, DateUtils} from "@/core/utilities";
 import {RangeCalendarComponent} from "../range-calendar/range-calendar.component";
 
 @Component({

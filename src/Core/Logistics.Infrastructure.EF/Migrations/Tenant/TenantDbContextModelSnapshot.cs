@@ -201,7 +201,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("Region")
+                            b1.Property<string>("State")
                                 .IsRequired()
                                 .HasColumnType("text");
 
@@ -229,7 +229,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("Region")
+                            b1.Property<string>("State")
                                 .IsRequired()
                                 .HasColumnType("text");
 
@@ -286,14 +286,14 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
-                    b.Property<string>("Comment")
-                        .HasColumnType("text");
-
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<int?>("Method")
                         .HasColumnType("integer");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("text");
 
                     b.Property<DateTime?>("PaymentDate")
                         .HasColumnType("timestamp with time zone");
@@ -303,6 +303,15 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("StripeInvoiceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripePaymentIntentId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("SubscriptionId")
+                        .HasColumnType("text");
 
                     b.ComplexProperty<Dictionary<string, object>>("BillingAddress", "Logistics.Domain.Entities.Payment.BillingAddress#Address", b1 =>
                         {
@@ -323,7 +332,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("Region")
+                            b1.Property<string>("State")
                                 .IsRequired()
                                 .HasColumnType("text");
 
@@ -335,6 +344,65 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.ToTable("Payments", (string)null);
+                });
+
+            modelBuilder.Entity("Logistics.Domain.Entities.PaymentMethod", b =>
+                {
+                    b.Property<string>("Id")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("StripePaymentMethodId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("VerificationStatus")
+                        .HasColumnType("integer");
+
+                    b.ComplexProperty<Dictionary<string, object>>("BillingAddress", "Logistics.Domain.Entities.PaymentMethod.BillingAddress#Address", b1 =>
+                        {
+                            b1.IsRequired();
+
+                            b1.Property<string>("City")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Country")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Line1")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("Line2")
+                                .HasColumnType("text");
+
+                            b1.Property<string>("State")
+                                .IsRequired()
+                                .HasColumnType("text");
+
+                            b1.Property<string>("ZipCode")
+                                .IsRequired()
+                                .HasColumnType("text");
+                        });
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("StripePaymentMethodId");
+
+                    b.ToTable("PaymentMethods", (string)null);
+
+                    b.HasDiscriminator<int>("Type");
+
+                    b.UseTphMappingStrategy();
                 });
 
             modelBuilder.Entity("Logistics.Domain.Entities.Payroll", b =>
@@ -445,7 +513,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("Region")
+                            b1.Property<string>("State")
                                 .IsRequired()
                                 .HasColumnType("text");
 
@@ -457,6 +525,98 @@ namespace Logistics.Infrastructure.EF.Migrations.Tenant
                     b.HasKey("Id");
 
                     b.ToTable("Trucks", (string)null);
+                });
+
+            modelBuilder.Entity("Logistics.Domain.Entities.BankAccountPaymentMethod", b =>
+                {
+                    b.HasBaseType("Logistics.Domain.Entities.PaymentMethod");
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("SwiftCode")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasDiscriminator().HasValue(2);
+                });
+
+            modelBuilder.Entity("Logistics.Domain.Entities.CardPaymentMethod", b =>
+                {
+                    b.HasBaseType("Logistics.Domain.Entities.PaymentMethod");
+
+                    b.Property<string>("CardHolderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("CardNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("Cvc")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("ExpMonth")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("ExpYear")
+                        .HasColumnType("integer");
+
+                    b.HasDiscriminator().HasValue(0);
+                });
+
+            modelBuilder.Entity("Logistics.Domain.Entities.UsBankAccountPaymentMethod", b =>
+                {
+                    b.HasBaseType("Logistics.Domain.Entities.PaymentMethod");
+
+                    b.Property<string>("AccountHolderName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("AccountHolderType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("AccountNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<int>("AccountType")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("BankName")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoutingNumber")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("VerificationUrl")
+                        .HasColumnType("text");
+
+                    b.ToTable("PaymentMethods", t =>
+                        {
+                            t.Property("AccountHolderName")
+                                .HasColumnName("UsBankAccountPaymentMethod_AccountHolderName");
+
+                            t.Property("AccountNumber")
+                                .HasColumnName("UsBankAccountPaymentMethod_AccountNumber");
+
+                            t.Property("BankName")
+                                .HasColumnName("UsBankAccountPaymentMethod_BankName");
+                        });
+
+                    b.HasDiscriminator().HasValue(1);
                 });
 
             modelBuilder.Entity("Logistics.Domain.Entities.Employee", b =>

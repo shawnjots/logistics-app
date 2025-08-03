@@ -11,13 +11,16 @@ public abstract class PageBase : ComponentBase
     #region Injectable services
 
     [Inject]
-    private IApiClient ApiClient { get; set; } = default!;
+    private IApiClient ApiClient { get; set; } = null!;
 
     [Inject] 
-    private IAccessTokenProvider AccessTokenProvider { get; set; } = default!;
+    private IAccessTokenProvider AccessTokenProvider { get; set; } = null!;
 
     [Inject] 
-    private NotificationService NotificationService { get; set; } = default!;
+    private NotificationService NotificationService { get; set; } = null!;
+    
+    [Inject]
+    private TooltipService TooltipService { get; set; } = null!;
 
     #endregion
 
@@ -54,6 +57,11 @@ public abstract class PageBase : ComponentBase
             Severity = NotificationSeverity.Success
         });
     }
+
+    protected void ShowTooltip(ElementReference element, string message, TooltipOptions options = null!)
+    {
+        TooltipService.Open(element, message, options);
+    }
     
     protected async Task<bool> CallApiAsync(Func<IApiClient, Task<Result>> apiFunction)
     {
@@ -85,7 +93,7 @@ public abstract class PageBase : ComponentBase
         HandleError(apiResult);
         IsLoading = false;
         return apiResult.Data != null
-            ? new PagedData<T>(apiResult.Data, apiResult.TotalItems) : default;
+            ? new PagedData<T>(apiResult.Data, apiResult.TotalItems) : null;
     }
 
     private bool HandleError(IResult apiResult)
@@ -98,6 +106,7 @@ public abstract class PageBase : ComponentBase
                 Detail = apiResult.Error,
                 Severity = NotificationSeverity.Error
             });
+            Console.Error.WriteLine(apiResult.Error);
             return false;
         }
 

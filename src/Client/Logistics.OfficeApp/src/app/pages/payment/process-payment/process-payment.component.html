@@ -48,17 +48,17 @@
                     <div class="field-checkbox">
                       <p-radioButton
                         formControlName="paymentMethod"
-                        [inputId]="paymentMethod.description"
+                        [inputId]="paymentMethod.value"
                         [value]="paymentMethod.value"
                       ></p-radioButton>
-                      <label [for]="paymentMethod.description" class="ms-2">{{
-                        paymentMethod.description
+                      <label [for]="paymentMethod.value" class="ms-2">{{
+                        paymentMethod.label
                       }}</label>
                     </div>
                   }
                 </div>
 
-                @if (form.get("paymentMethod")?.value === paymentMethod.CreditCard) {
+                @if (form.get("paymentMethod")?.value === "card") {
                   <h5>Credit/Debit card details</h5>
                   <hr />
 
@@ -88,21 +88,21 @@
                         id="cardExpirationDate"
                         formControlName="cardExpirationDate"
                         styleClass="form-control"
-                        mask="99/99"
-                        placeholder="MM/YY"
+                        mask="99/2099"
+                        placeholder="MM/YYYY"
                       />
                     </div>
                     <div class="col-6">
-                      <label for="cardCvv" class="form-label">CVV</label>
+                      <label for="cardCvc" class="form-label">CVC</label>
                       <input
-                        id="cardCvv"
-                        formControlName="cardCvv"
+                        id="cardCvc"
+                        formControlName="cardCvc"
                         class="form-control"
                         placeholder="123"
                       />
                     </div>
                   </div>
-                } @else if (form.get("paymentMethod")?.value === paymentMethod.BankAccount) {
+                } @else if (form.get("paymentMethod")?.value === "us_bank_account") {
                   <h5>Bank account details</h5>
                   <hr />
 

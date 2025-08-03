@@ -1,9 +1,9 @@
 import {Injectable} from "@angular/core";
-import {map, Observable} from "rxjs";
-import {RoleDto, UserDto} from "@/core/models";
-import {ApiService} from "@/core/services";
-import {UserRole} from "@/core/enums";
+import {Observable, map} from "rxjs";
+import {ApiService} from "@/core/api";
+import {RoleDto, UserDto} from "@/core/api/models";
 import {AuthService} from "@/core/auth";
+import {UserRole} from "@/core/enums";
 
 @Injectable()
 export class UserService {
@@ -18,7 +18,7 @@ export class UserService {
   }
 
   searchUser(searchQuery: string): Observable<UserDto[] | undefined> {
-    const users$ = this.apiService.getUsers({search: searchQuery});
+    const users$ = this.apiService.userApi.getUsers({search: searchQuery});
     return users$.pipe(map((i) => i.data));
   }
 

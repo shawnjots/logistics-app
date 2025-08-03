@@ -1,16 +1,21 @@
-import {Component} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component} from "@angular/core";
 import {RouterModule} from "@angular/router";
+import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {TableLazyLoadEvent, TableModule} from "primeng/table";
 import {TooltipModule} from "primeng/tooltip";
-import {ButtonModule} from "primeng/button";
-import {PaymentDto} from "@/core/models";
-import {ApiService} from "@/core/services";
-import {PaymentFor, PaymentForEnum, PaymentMethod, PaymentMethodEnum} from "@/core/enums";
-import {PredefinedDateRanges} from "@/core/utils";
 import {PaymentStatusTagComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {
+  PaymentDto,
+  PaymentFor,
+  PaymentMethodType,
+  paymentForOptions,
+  paymentMethodTypeOptions,
+} from "@/core/api/models";
 import {AddressPipe} from "@/core/pipes";
+import {PredefinedDateRanges} from "@/core/utilities";
 
 @Component({
   selector: "app-list-payments",
@@ -76,15 +81,17 @@ export class ListPaymentsComponent {
       });
   }
 
-  getPaymentMethodDesc(enumValue?: PaymentMethod): string {
+  getPaymentMethodDesc(enumValue?: PaymentMethodType): string {
     if (enumValue == null) {
       return "N/A";
     }
 
-    return PaymentMethodEnum.getValue(enumValue).description;
+    return (
+      paymentMethodTypeOptions.find((option) => option.value === enumValue)?.label ?? "Unknown"
+    );
   }
 
   getPaymentForDesc(enumValue: PaymentFor): string {
-    return PaymentForEnum.getValue(enumValue).description;
+    return paymentForOptions.find((option) => option.value === enumValue)?.label ?? "Unknown";
   }
 }

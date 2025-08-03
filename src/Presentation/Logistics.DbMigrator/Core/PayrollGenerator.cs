@@ -61,7 +61,7 @@ public class PayrollGenerator
     } 
     
     private async Task<bool> IsPayrollExisting(
-        ITenantRepository<Payroll> payrollRepository,
+        ITenantRepository<Payroll, string> payrollRepository,
         string employeeId,
         DateTime startDate,
         DateTime endDate)
@@ -80,7 +80,7 @@ public class PayrollGenerator
         {
             Line1 = "40 Crescent Ave",
             City = "Boston",
-            Region = "Massachusetts",
+            State = "Massachusetts",
             ZipCode = "02125",
             Country = "United States"
         };
@@ -89,7 +89,7 @@ public class PayrollGenerator
         {
             Amount = CalculateSalary(employee, startDate, endDate),
             PaymentFor = PaymentFor.Payroll,
-            Method = PaymentMethod.BankAccount,
+            Method = PaymentMethodType.Card,
             Status = PaymentStatus.Paid,
             PaymentDate = DateTime.UtcNow,
             BillingAddress = billingAddress

@@ -9,12 +9,14 @@ public class Tenant : Entity
     public string? CompanyName { get; set; }
     public Address CompanyAddress { get; set; } = Address.NullAddress;
     public required string ConnectionString { get; set; }
+    public required string BillingEmail { get; set; }
+    public string? DotNumber { get; set; }
+    public string? StripeCustomerId { get; set; }
     
-    public string? SubscriptionId { get; set; }
     public virtual Subscription? Subscription { get; set; }
     
-    /**
-     * Users that belong to this tenant
-     */
+    /// <summary>
+    /// Users that belong to this tenant
+    /// </summary>
     public virtual List<User> Users { get; } = [];
 }

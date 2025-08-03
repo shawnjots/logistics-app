@@ -1,15 +1,15 @@
 import {Injectable} from "@angular/core";
 import {Observable} from "rxjs";
-import {NotificationDto, Result} from "@/core/models";
-import {PredefinedDateRanges} from "@/core/utils";
-import {TenantService} from "./tenant.service";
+import {ApiService} from "@/core/api";
+import {NotificationDto, Result} from "@/core/api/models";
+import {PredefinedDateRanges} from "@/core/utilities";
 import {BaseHubConnection} from "./base-hub-connection";
-import {ApiService} from "./api.service";
+import {TenantService} from "./tenant.service";
 
 @Injectable({providedIn: "root"})
 export class NotificationService extends BaseHubConnection {
   constructor(
-    private apiService: ApiService,
+    private readonly apiService: ApiService,
     tenantService: TenantService
   ) {
     super("notification", tenantService);

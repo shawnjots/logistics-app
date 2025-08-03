@@ -1,21 +1,20 @@
-import {Component} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component} from "@angular/core";
 import {RouterModule} from "@angular/router";
-import {TableLazyLoadEvent, TableModule} from "primeng/table";
+import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {InputTextModule} from "primeng/inputtext";
-import {ButtonModule} from "primeng/button";
+import {TableLazyLoadEvent, TableModule} from "primeng/table";
 import {TooltipModule} from "primeng/tooltip";
-import {PayrollDto} from "@/core/models";
-import {
-  PaymentMethod,
-  PaymentMethodEnum,
-  PaymentStatus,
-  SalaryType,
-  SalaryTypeEnum,
-} from "@/core/enums";
-import {ApiService} from "@/core/services";
 import {PaymentStatusTagComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {
+  PaymentMethodType,
+  PayrollDto,
+  SalaryType,
+  paymentMethodTypeOptions,
+  salaryTypeOptions,
+} from "@/core/api/models";
 
 @Component({
   selector: "app-list-payroll",
@@ -34,8 +33,6 @@ import {PaymentStatusTagComponent} from "@/components";
   ],
 })
 export class ListPayrollComponent {
-  public salaryType = SalaryType;
-  public paymentStatus = PaymentStatus;
   public payrolls: PayrollDto[] = [];
   public isLoading = false;
   public totalRecords = 0;
@@ -80,15 +77,15 @@ export class ListPayrollComponent {
       });
   }
 
-  getPaymentMethodDesc(enumValue?: PaymentMethod): string {
+  getPaymentMethodDesc(enumValue?: PaymentMethodType): string {
     if (enumValue == null) {
       return "N/A";
     }
 
-    return PaymentMethodEnum.getValue(enumValue).description;
+    return paymentMethodTypeOptions.find((x) => x.value === enumValue)?.label ?? "N/A";
   }
 
   getSalaryTypeDesc(enumValue: SalaryType): string {
-    return SalaryTypeEnum.getValue(enumValue).description;
+    return salaryTypeOptions.find((option) => option.value === enumValue)?.label ?? "N/A";
   }
 }

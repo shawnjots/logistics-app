@@ -1,21 +1,21 @@
-import {Component, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, RouterModule} from "@angular/router";
+import {ButtonModule} from "primeng/button";
+import {CardModule} from "primeng/card";
+import {ProgressSpinnerModule} from "primeng/progressspinner";
 import {TableLazyLoadEvent, TableModule} from "primeng/table";
 import {TooltipModule} from "primeng/tooltip";
-import {CardModule} from "primeng/card";
-import {ButtonModule} from "primeng/button";
-import {ProgressSpinnerModule} from "primeng/progressspinner";
-import {
-  SalaryType,
-  PaymentStatus,
-  PaymentMethod,
-  PaymentMethodEnum,
-  SalaryTypeEnum,
-} from "@/core/enums";
-import {EmployeeDto, PayrollDto} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
 import {PaymentStatusTagComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {
+  EmployeeDto,
+  PaymentMethodType,
+  PayrollDto,
+  SalaryType,
+  paymentMethodTypeOptions,
+  salaryTypeOptions,
+} from "@/core/api/models";
 
 @Component({
   selector: "app-view-employee-payrolls",
@@ -34,8 +34,6 @@ import {PaymentStatusTagComponent} from "@/components";
 })
 export class ViewEmployeePayrollsComponent implements OnInit {
   private employeeId!: string;
-  public salaryType = SalaryType;
-  public paymentStatus = PaymentStatus;
   public payrolls: PayrollDto[] = [];
   public employee?: EmployeeDto;
   public isLoadingEmployee = false;
@@ -45,8 +43,7 @@ export class ViewEmployeePayrollsComponent implements OnInit {
 
   constructor(
     private readonly apiService: ApiService,
-    private readonly route: ActivatedRoute,
-    private readonly toastService: ToastService
+    private readonly route: ActivatedRoute
   ) {}
 
   ngOnInit(): void {
@@ -81,16 +78,18 @@ export class ViewEmployeePayrollsComponent implements OnInit {
       });
   }
 
-  getPaymentMethodDesc(enumValue?: PaymentMethod): string {
+  getPaymentMethodDesc(enumValue?: PaymentMethodType): string {
     if (enumValue == null) {
       return "N/A";
     }
 
-    return PaymentMethodEnum.getValue(enumValue).description;
+    return (
+      paymentMethodTypeOptions.find((option) => option.value === enumValue)?.label ?? "Unknown"
+    );
   }
 
   getSalaryTypeDesc(enumValue: SalaryType): string {
-    return SalaryTypeEnum.getValue(enumValue).description;
+    return salaryTypeOptions.find((option) => option.value === enumValue)?.label ?? "Unknown";
   }
 
   private fetchEmployee() {

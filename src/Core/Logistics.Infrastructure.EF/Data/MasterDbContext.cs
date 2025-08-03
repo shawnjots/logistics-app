@@ -2,14 +2,26 @@
 using Logistics.Infrastructure.EF.Helpers;
 using Logistics.Infrastructure.EF.Interceptors;
 using Logistics.Infrastructure.EF.Options;
+using Logistics.Shared.Consts;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace Logistics.Infrastructure.EF.Data;
 
-public class MasterDbContext : IdentityDbContext<User, AppRole, string>, IDataProtectionKeyContext
+public class MasterDbContext : IdentityDbContext<
+    User, 
+    AppRole, 
+    string, 
+    IdentityUserClaim<string>, 
+    IdentityUserRole<string>, 
+    IdentityUserLogin<string>, 
+    AppRoleClaim, 
+    IdentityUserToken<string>
+    >, 
+    IDataProtectionKeyContext
 {
     private readonly DispatchDomainEventsInterceptor? _dispatchDomainEventsInterceptor;
     private readonly string _connectionString;
@@ -46,18 +58,20 @@ public class MasterDbContext : IdentityDbContext<User, AppRole, string>, IDataPr
         base.OnModelCreating(builder);
         builder.Entity<Tenant>().ToTable("Tenants");
 
+        builder.Entity<AppRole>(entity =>
+        {
+            entity.HasMany(i => i.Claims)
+                .WithOne(i => i.Role)
+                .HasForeignKey(i => i.RoleId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
         builder.Entity<User>(entity =>
         {
             entity.HasOne(i => i.Tenant)
                 .WithMany(i => i.Users)
                 .HasForeignKey(i => i.TenantId)
                 .OnDelete(DeleteBehavior.SetNull);
-        });
-        
-        builder.Entity<SubscriptionPayment>(entity =>
-        {
-            entity.ToTable("SubscriptionPayments");
-            entity.Property(i => i.Amount).HasPrecision(18, 2);
         });
         
         builder.Entity<SubscriptionPlan>(entity =>
@@ -72,15 +86,11 @@ public class MasterDbContext : IdentityDbContext<User, AppRole, string>, IDataPr
 
         builder.Entity<Subscription>(entity =>
         {
-            entity.ToTable("Subscription");
+            entity.ToTable("Subscriptions");
             
             entity.HasOne(i => i.Tenant)
                 .WithOne(i => i.Subscription)
                 .HasForeignKey<Subscription>(i => i.TenantId);
-
-            entity.HasMany(i => i.Payments)
-                .WithOne(i => i.Subscription)
-                .HasForeignKey(i => i.SubscriptionId);
         });
     }
 }

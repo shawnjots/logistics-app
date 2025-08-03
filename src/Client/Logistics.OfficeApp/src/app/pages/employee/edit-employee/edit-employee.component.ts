@@ -1,21 +1,22 @@
-import {Component, OnInit, ViewEncapsulation} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, OnInit, ViewEncapsulation} from "@angular/core";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {ActivatedRoute, RouterLink} from "@angular/router";
 import {ConfirmationService} from "primeng/api";
 import {ButtonModule} from "primeng/button";
-import {ProgressSpinnerModule} from "primeng/progressspinner";
 import {CardModule} from "primeng/card";
 import {ConfirmDialogModule} from "primeng/confirmdialog";
+import {ProgressSpinnerModule} from "primeng/progressspinner";
+import {SelectModule} from "primeng/select";
 import {ToastModule} from "primeng/toast";
-import {DropdownModule} from "primeng/dropdown";
-import {SalaryType, SalaryTypeEnum, UserRole} from "@/core/enums";
-import {EmployeeDto, UpdateEmployeeCommand} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
-import {AuthService} from "@/core/auth";
-import {ChangeRoleDialogComponent} from "../components";
 import {ValidationSummaryComponent} from "@/components";
-import {NumberUtils} from "@/core/utils";
+import {ApiService} from "@/core/api";
+import {EmployeeDto, SalaryType, UpdateEmployeeCommand, salaryTypeOptions} from "@/core/api/models";
+import {AuthService} from "@/core/auth";
+import {UserRole} from "@/core/enums";
+import {ToastService} from "@/core/services";
+import {NumberUtils} from "@/core/utilities";
+import {ChangeRoleDialogComponent} from "../components";
 
 @Component({
   selector: "app-edit-employee",
@@ -32,9 +33,9 @@ import {NumberUtils} from "@/core/utils";
     ProgressSpinnerModule,
     ButtonModule,
     RouterLink,
-    DropdownModule,
     ReactiveFormsModule,
     ValidationSummaryComponent,
+    SelectModule,
   ],
   providers: [ConfirmationService],
 })
@@ -44,7 +45,7 @@ export class EditEmployeeComponent implements OnInit {
   public showUpdateDialog = false;
   public canChangeRole = false;
   public employee?: EmployeeDto;
-  public salaryTypes = SalaryTypeEnum.toArray();
+  public salaryTypes = salaryTypeOptions;
   public form: FormGroup<UpdateEmployeeForm>;
 
   constructor(

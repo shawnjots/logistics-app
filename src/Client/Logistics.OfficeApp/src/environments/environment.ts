@@ -5,4 +5,6 @@ export const environment = {
   apiHost: "https://localhost:7000",
   idHost: "https://localhost:7001",
   // idHost: 'https://id.clensonic.org'
+  stripePubKey:
+    "pk_test_51QyIsE4Klqx5siJt8eAQrn9CxmrqRxgnvV2GfZIVmWClrofjDZYcFqcvPlYsxImxegjVxgPZciYc1bqs8veooAE2002gsEpsit",
 };

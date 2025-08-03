@@ -1,18 +1,19 @@
-import {Component} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component} from "@angular/core";
 import {RouterLink} from "@angular/router";
-import {TableLazyLoadEvent, TableModule} from "primeng/table";
-import {InputTextModule} from "primeng/inputtext";
 import {SharedModule} from "primeng/api";
-import {CardModule} from "primeng/card";
-import {TooltipModule} from "primeng/tooltip";
 import {ButtonModule} from "primeng/button";
+import {CardModule} from "primeng/card";
+import {InputGroupModule} from "primeng/inputgroup";
+import {InputGroupAddonModule} from "primeng/inputgroupaddon";
+import {InputTextModule} from "primeng/inputtext";
+import {TableLazyLoadEvent, TableModule} from "primeng/table";
 import {TagModule} from "primeng/tag";
-import {LoadStatus, LoadStatusEnum} from "@/core/enums";
-import {LoadDto} from "@/core/models";
-import {ApiService} from "@/core/services";
-import {AddressPipe, DistanceUnitPipe} from "@/core/pipes";
+import {TooltipModule} from "primeng/tooltip";
 import {PaymentStatusTagComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {LoadDto, LoadStatus, loadStatusOptions} from "@/core/api/models";
+import {AddressPipe, DistanceUnitPipe} from "@/core/pipes";
 
 @Component({
   selector: "app-list-loads",
@@ -32,6 +33,8 @@ import {PaymentStatusTagComponent} from "@/components";
     PaymentStatusTagComponent,
     AddressPipe,
     TagModule,
+    InputGroupModule,
+    InputGroupAddonModule,
   ],
 })
 export class ListLoadComponent {
@@ -82,7 +85,7 @@ export class ListLoadComponent {
   }
 
   getLoadStatusDesc(enumValue: LoadStatus): string {
-    return LoadStatusEnum.getValue(enumValue).description;
+    return loadStatusOptions.find((option) => option.value === enumValue)?.label ?? "";
   }
 
   getLoadStatusSeverity(status: LoadStatus): "success" | "info" {

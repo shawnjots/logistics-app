@@ -6,6 +6,18 @@
   "files.exclude": {
     "**/node_modules": true,
     "**/.angular": true,
-    "**/dist": true,
+    "**/dist": true
   },
+  "angular-schematics.schematicsDefaultOptions": {
+    "angular-*": {
+      "style": "scss",
+      "externalTemplate": true
+    }
+  },
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  }
 }

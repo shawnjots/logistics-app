@@ -1,14 +1,19 @@
-import {Component, OnInit} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, OnInit} from "@angular/core";
 import {ActivatedRoute, RouterModule} from "@angular/router";
-import {CardModule} from "primeng/card";
-import {ButtonModule} from "primeng/button";
 import {jsPDF} from "jspdf";
+import {ButtonModule} from "primeng/button";
+import {CardModule} from "primeng/card";
 import {ProgressSpinnerModule} from "primeng/progressspinner";
-import {ApiService, TenantService} from "@/core/services";
-import {AddressDto, InvoiceDto} from "@/core/models";
-import {PaymentMethod, PaymentMethodEnum, PaymentStatus} from "@/core/enums";
+import {ApiService} from "@/core/api";
+import {
+  AddressDto,
+  InvoiceDto,
+  PaymentMethodType,
+  paymentMethodTypeOptions,
+} from "@/core/api/models";
 import {AddressPipe} from "@/core/pipes";
+import {TenantService} from "@/core/services";
 
 @Component({
   selector: "app-view-invoice",
@@ -26,7 +31,6 @@ import {AddressPipe} from "@/core/pipes";
 })
 export class ViewInvoiceComponent implements OnInit {
   private id?: string;
-  public paymentStatus = PaymentStatus;
   public isLoading = false;
   public companyName?: string;
   public companyAddress?: AddressDto;
@@ -49,11 +53,11 @@ export class ViewInvoiceComponent implements OnInit {
     this.fetchInvoice();
   }
 
-  getPaymentMethodDesc(enumValue?: PaymentMethod): string {
+  getPaymentMethodDesc(enumValue?: PaymentMethodType): string {
     if (enumValue == null) {
       return "N/A";
     }
-    return PaymentMethodEnum.getValue(enumValue).description;
+    return paymentMethodTypeOptions.find((x) => x.value === enumValue)?.label ?? "N/A";
   }
 
   exportToPDF() {

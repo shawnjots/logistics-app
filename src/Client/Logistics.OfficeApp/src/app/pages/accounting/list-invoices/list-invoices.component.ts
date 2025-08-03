@@ -1,15 +1,14 @@
-import {Component} from "@angular/core";
 import {CommonModule, CurrencyPipe, DatePipe} from "@angular/common";
+import {Component} from "@angular/core";
 import {RouterModule} from "@angular/router";
+import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {TableLazyLoadEvent, TableModule} from "primeng/table";
-import {ButtonModule} from "primeng/button";
 import {TooltipModule} from "primeng/tooltip";
-import {InvoiceDto} from "@/core/models";
-import {ApiService} from "@/core/services";
-import {PredefinedDateRanges} from "@/core/utils";
-import {PaymentStatus} from "@/core/enums";
 import {PaymentStatusTagComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {InvoiceDto} from "@/core/api/models";
+import {PredefinedDateRanges} from "@/core/utilities";
 
 @Component({
   selector: "app-list-invoices",
@@ -29,7 +28,6 @@ import {PaymentStatusTagComponent} from "@/components";
   ],
 })
 export class ListInvoicesComponent {
-  public paymentStatus = PaymentStatus;
   public invoices: InvoiceDto[] = [];
   public isLoading = true;
   public totalRecords = 0;

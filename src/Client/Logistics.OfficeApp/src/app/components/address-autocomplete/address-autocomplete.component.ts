@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-empty-function */
-import {Component, OnInit, input, model, output, signal} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, OnInit, input, model, output, signal} from "@angular/core";
 import {ControlValueAccessor, FormsModule, NG_VALUE_ACCESSOR} from "@angular/forms";
-import {AddressDto} from "@/core/models";
-import {Converters} from "@/core/utils";
+import {AddressDto} from "@/core/api/models";
+import {Converters} from "@/core/utilities";
 
 @Component({
   selector: "app-address-autocomplete",
@@ -77,7 +77,7 @@ export class AddressAutocompleteComponent implements ControlValueAccessor, OnIni
     const addressObj: AddressDto = {
       line1: street,
       city: city,
-      region: region,
+      state: region,
       zipCode: zipCode,
       country: country,
     };

@@ -1,19 +1,24 @@
 import {Component, OnInit, ViewEncapsulation} from "@angular/core";
-import {FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {RouterLink} from "@angular/router";
-import {ButtonModule} from "primeng/button";
-import {DropdownModule} from "primeng/dropdown";
 import {AutoCompleteModule} from "primeng/autocomplete";
-import {ProgressSpinnerModule} from "primeng/progressspinner";
+import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {ConfirmDialogModule} from "primeng/confirmdialog";
+import {ProgressSpinnerModule} from "primeng/progressspinner";
+import {SelectModule} from "primeng/select";
 import {ToastModule} from "primeng/toast";
-import {ConfirmationService} from "primeng/api";
-import {SalaryType, SalaryTypeEnum} from "@/core/enums";
-import {CreateEmployeeCommand, RoleDto, UserDto} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
-import {UserService} from "../services";
 import {ValidationSummaryComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {
+  CreateEmployeeCommand,
+  RoleDto,
+  SalaryType,
+  UserDto,
+  salaryTypeOptions,
+} from "@/core/api/models";
+import {ToastService} from "@/core/services";
+import {UserService} from "../services";
 
 @Component({
   selector: "app-add-employee",
@@ -29,18 +34,18 @@ import {ValidationSummaryComponent} from "@/components";
     FormsModule,
     ReactiveFormsModule,
     AutoCompleteModule,
-    DropdownModule,
+    SelectModule,
     ButtonModule,
     RouterLink,
     ValidationSummaryComponent,
   ],
-  providers: [UserService, ConfirmationService],
+  providers: [UserService],
 })
 export class AddEmployeeComponent implements OnInit {
   public suggestedUsers: UserDto[] = [];
   public form: FormGroup<CreateEmployeeForm>;
   public roles: RoleDto[] = [];
-  public salaryTypes = SalaryTypeEnum.toArray();
+  public salaryTypes = salaryTypeOptions;
   public isLoading = false;
 
   constructor(

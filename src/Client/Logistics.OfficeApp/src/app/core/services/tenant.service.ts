@@ -1,35 +1,43 @@
 import {HttpHeaders} from "@angular/common/http";
 import {Injectable} from "@angular/core";
-import {TenantDto} from "@/core/models";
+import {Subject} from "rxjs";
+import {ApiService} from "@/core/api";
+import {SubscriptionStatus, TenantDto} from "@/core/api/models";
 import {CookieService} from "./cookie.service";
 
 @Injectable({providedIn: "root"})
 export class TenantService {
   private tenantId: string | null = null;
   private tenantData: TenantDto | null = null;
+  private readonly tenantDataChangedSource = new Subject<TenantDto | null>();
 
-  constructor(private readonly cookieService: CookieService) {}
+  /**
+   * Observable that emits when the tenant data changes
+   */
+  public readonly tenantDataChanged$ = this.tenantDataChangedSource.asObservable();
+
+  constructor(
+    private readonly cookieService: CookieService,
+    private readonly apiService: ApiService
+  ) {}
 
   getTenantData(): TenantDto | null {
     return this.tenantData;
   }
 
-  setTenantData(value: TenantDto): void {
-    if (this.tenantData === value) {
-      return;
-    }
-
-    this.tenantData = value;
-  }
-
   /**
-   * Set tenant id and save it to the cookie
-   * @param tenantId Tenant id
+   * Set tenant id and save it to the cookie, then fetch tenant data
+   * @param tenantId Tenant ID
    */
   setTenantId(tenantId: string): void {
     this.tenantId = tenantId;
     this.setTenantCookie(tenantId);
-    console.log("TenantId set to:", tenantId);
+
+    // Clear existing data and notify subscribers
+    this.tenantData = null;
+    this.tenantDataChangedSource.next(null);
+
+    this.fetchTenantData(tenantId);
   }
 
   /**
@@ -53,6 +61,24 @@ export class TenantService {
     return headers.append("X-Tenant", this.tenantId);
   }
 
+  /**
+   * Check if the tenant has an active subscription
+   * If the tenant is not required to have a subscription, it returns true
+   * @returns True if the tenant has an active subscription, otherwise false
+   */
+  isSubscriptionActive(): boolean {
+    if (!this.tenantData) {
+      return false;
+    }
+
+    // If subscription is null, it means the tenant is not required to have a subscription
+    if (this.tenantData.subscription == null) {
+      return true;
+    }
+
+    return this.tenantData?.subscription?.status === SubscriptionStatus.Active;
+  }
+
   private setTenantCookie(tenantId: string) {
     if (!tenantId) {
       return;
@@ -68,6 +94,22 @@ export class TenantService {
       name: "X-Tenant",
       value: tenantId,
       session: true,
+    });
+  }
+
+  /**
+   * Fetch tenant data and save it to the tenantData
+   * @param tenantId The tenant ID
+   */
+  private fetchTenantData(tenantId: string): void {
+    this.apiService.tenantApi.getTenant(tenantId).subscribe((result) => {
+      if (!result.success || !result.data) {
+        return;
+      }
+
+      this.tenantData = result.data;
+      this.tenantDataChangedSource.next(result.data);
+      console.log("Tenant data:", result.data);
     });
   }
 }

@@ -1,31 +1,28 @@
-import {Component, OnInit, signal} from "@angular/core";
-import {Router, RouterOutlet} from "@angular/router";
+import {Component, signal} from "@angular/core";
+import {RouterOutlet} from "@angular/router";
+import {ConfirmDialog} from "primeng/confirmdialog";
 import {ToastModule} from "primeng/toast";
-import {AuthService} from "@/core/auth";
 import {BreadcrumbComponent, SidebarComponent} from "@/components/layout";
+import {AuthService} from "@/core/auth";
 
 @Component({
   selector: "app-root",
   templateUrl: "./app.component.html",
-  styleUrls: ["./app.component.scss"],
-  standalone: true,
-  imports: [BreadcrumbComponent, ToastModule, RouterOutlet, SidebarComponent],
+  styleUrl: "./app.component.scss",
+  imports: [BreadcrumbComponent, ToastModule, RouterOutlet, SidebarComponent, ConfirmDialog],
 })
-export class AppComponent implements OnInit {
+export class AppComponent {
   public readonly isAuthenticated = signal(false);
 
   constructor(
-    private readonly authService: AuthService,
-    private readonly router: Router
-  ) {}
-
-  ngOnInit(): void {
+    private readonly authService: AuthService
+    //private readonly router: Router
+  ) {
     this.authService
       .checkAuth()
       .subscribe((isAuthenticated) => this.isAuthenticated.set(isAuthenticated));
 
     this.authService.onAuthenticated().subscribe((result) => this.isAuthenticated.set(result));
-    // this.printPath('', this.router.config);
   }
 
   // private printPath(parent: String, config: Route[]) {

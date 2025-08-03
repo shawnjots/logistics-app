@@ -55,6 +55,31 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.ToTable("AspNetRoles", (string)null);
                 });
 
+            modelBuilder.Entity("Logistics.Domain.Entities.AppRoleClaim", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("ClaimType")
+                        .HasColumnType("text");
+
+                    b.Property<string>("ClaimValue")
+                        .HasColumnType("text");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetRoleClaims", (string)null);
+                });
+
             modelBuilder.Entity("Logistics.Domain.Entities.Subscription", b =>
                 {
                     b.Property<string>("Id")
@@ -63,7 +88,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.Property<DateTime?>("EndDate")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<DateTime?>("NextPaymentDate")
+                    b.Property<DateTime?>("NextBillingDate")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<string>("PlanId")
@@ -75,6 +100,12 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
 
                     b.Property<int>("Status")
                         .HasColumnType("integer");
+
+                    b.Property<string>("StripeCustomerId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripeSubscriptionId")
+                        .HasColumnType("text");
 
                     b.Property<string>("TenantId")
                         .IsRequired()
@@ -90,67 +121,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.HasIndex("TenantId")
                         .IsUnique();
 
-                    b.ToTable("Subscription", (string)null);
-                });
-
-            modelBuilder.Entity("Logistics.Domain.Entities.SubscriptionPayment", b =>
-                {
-                    b.Property<string>("Id")
-                        .HasColumnType("text");
-
-                    b.Property<decimal>("Amount")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("numeric(18,2)");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int?>("Method")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("PaymentDate")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Status")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("SubscriptionId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.ComplexProperty<Dictionary<string, object>>("BillingAddress", "Logistics.Domain.Entities.SubscriptionPayment.BillingAddress#Address", b1 =>
-                        {
-                            b1.IsRequired();
-
-                            b1.Property<string>("City")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Country")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Line1")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Line2")
-                                .HasColumnType("text");
-
-                            b1.Property<string>("Region")
-                                .IsRequired()
-                                .HasColumnType("text");
-
-                            b1.Property<string>("ZipCode")
-                                .IsRequired()
-                                .HasColumnType("text");
-                        });
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SubscriptionId");
-
-                    b.ToTable("SubscriptionPayments", (string)null);
+                    b.ToTable("Subscriptions", (string)null);
                 });
 
             modelBuilder.Entity("Logistics.Domain.Entities.SubscriptionPlan", b =>
@@ -158,11 +129,24 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<DateTime?>("BillingCycleAnchor")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<DateTime>("CreatedDate")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("Description")
                         .HasColumnType("text");
+
+                    b.Property<int>("Interval")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("IntervalCount")
+                        .HasColumnType("integer");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -171,6 +155,15 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.Property<decimal>("Price")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("StripePriceId")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StripeProductId")
+                        .HasColumnType("text");
+
+                    b.Property<int>("TrialPeriod")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -182,6 +175,10 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.Property<string>("Id")
                         .HasColumnType("text");
 
+                    b.Property<string>("BillingEmail")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<string>("CompanyName")
                         .HasColumnType("text");
 
@@ -189,11 +186,14 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("DotNumber")
+                        .HasColumnType("text");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
-                    b.Property<string>("SubscriptionId")
+                    b.Property<string>("StripeCustomerId")
                         .HasColumnType("text");
 
                     b.ComplexProperty<Dictionary<string, object>>("CompanyAddress", "Logistics.Domain.Entities.Tenant.CompanyAddress#Address", b1 =>
@@ -215,7 +215,7 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                             b1.Property<string>("Line2")
                                 .HasColumnType("text");
 
-                            b1.Property<string>("Region")
+                            b1.Property<string>("State")
                                 .IsRequired()
                                 .HasColumnType("text");
 
@@ -337,31 +337,6 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.ToTable("DataProtectionKeys");
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("ClaimType")
-                        .HasColumnType("text");
-
-                    b.Property<string>("ClaimValue")
-                        .HasColumnType("text");
-
-                    b.Property<string>("RoleId")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetRoleClaims", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -443,6 +418,17 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("Logistics.Domain.Entities.AppRoleClaim", b =>
+                {
+                    b.HasOne("Logistics.Domain.Entities.AppRole", "Role")
+                        .WithMany("Claims")
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Role");
+                });
+
             modelBuilder.Entity("Logistics.Domain.Entities.Subscription", b =>
                 {
                     b.HasOne("Logistics.Domain.Entities.SubscriptionPlan", "Plan")
@@ -462,17 +448,6 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                     b.Navigation("Tenant");
                 });
 
-            modelBuilder.Entity("Logistics.Domain.Entities.SubscriptionPayment", b =>
-                {
-                    b.HasOne("Logistics.Domain.Entities.Subscription", "Subscription")
-                        .WithMany("Payments")
-                        .HasForeignKey("SubscriptionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Subscription");
-                });
-
             modelBuilder.Entity("Logistics.Domain.Entities.User", b =>
                 {
                     b.HasOne("Logistics.Domain.Entities.Tenant", "Tenant")
@@ -481,15 +456,6 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                         .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Tenant");
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
-                {
-                    b.HasOne("Logistics.Domain.Entities.AppRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserClaim<string>", b =>
@@ -534,9 +500,9 @@ namespace Logistics.Infrastructure.EF.Migrations.Master
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("Logistics.Domain.Entities.Subscription", b =>
+            modelBuilder.Entity("Logistics.Domain.Entities.AppRole", b =>
                 {
-                    b.Navigation("Payments");
+                    b.Navigation("Claims");
                 });
 
             modelBuilder.Entity("Logistics.Domain.Entities.SubscriptionPlan", b =>

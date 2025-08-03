@@ -1,50 +1,40 @@
-import {Component, EventEmitter, Input, OnInit, Output} from "@angular/core";
-import {FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {Component, OnInit, input, model, signal} from "@angular/core";
+import {FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators} from "@angular/forms";
 import {ButtonModule} from "primeng/button";
-import {DropdownModule} from "primeng/dropdown";
-import {ProgressSpinnerModule} from "primeng/progressspinner";
 import {DialogModule} from "primeng/dialog";
-import {RemoveEmployeeRoleCommand, RoleDto, UpdateEmployeeCommand} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
+import {ProgressSpinnerModule} from "primeng/progressspinner";
+import {SelectModule} from "primeng/select";
+import {ApiService} from "@/core/api";
+import {RemoveEmployeeRoleCommand, RoleDto, UpdateEmployeeCommand} from "@/core/api/models";
+import {ToastService} from "@/core/services";
 import {UserService} from "../../services";
 
 @Component({
   selector: "app-change-role-dialog",
   templateUrl: "./change-role-dialog.component.html",
-  styleUrls: [],
-  standalone: true,
   imports: [
     DialogModule,
     ProgressSpinnerModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownModule,
     ButtonModule,
+    SelectModule,
   ],
   providers: [UserService],
 })
 export class ChangeRoleDialogComponent implements OnInit {
-  public roles: RoleDto[];
-  public form: FormGroup;
-  public loading: boolean;
-
-  @Input() userId: string;
-  @Input() currentRoles?: RoleDto[];
-  @Input() visible: boolean;
-  @Output() visibleChange: EventEmitter<boolean>;
+  readonly roles = signal<RoleDto[]>([]);
+  readonly loading = signal(false);
+  readonly userId = input.required<string>();
+  readonly currentRoles = input<RoleDto[] | undefined>([]);
+  readonly visible = model<boolean>(false);
+  readonly form: FormGroup;
 
   constructor(
     private readonly apiService: ApiService,
     private readonly userService: UserService,
     private readonly toastService: ToastService
   ) {
-    this.currentRoles = [];
-    this.roles = [];
-    this.visible = false;
-    this.loading = false;
-    this.userId = "";
-    this.visibleChange = new EventEmitter<boolean>();
-
     this.form = new FormGroup({
       role: new FormControl("", Validators.required),
     });
@@ -63,23 +53,23 @@ export class ChangeRoleDialogComponent implements OnInit {
     }
 
     const updateEmployee: UpdateEmployeeCommand = {
-      userId: this.userId,
+      userId: this.userId(),
       role: role,
     };
 
-    this.loading = true;
+    this.loading.set(true);
     this.apiService.updateEmployee(updateEmployee).subscribe((result) => {
       if (result.success) {
         this.toastService.showSuccess(`Successfully changed employee's role`);
       }
 
-      this.loading = false;
+      this.loading.set(false);
     });
   }
 
   close() {
-    this.visible = false;
-    this.visibleChange.emit(false);
+    this.visible.set(false);
+    //this.visibleChange.emit(false);
     this.clearSelctedRole();
   }
 
@@ -90,31 +80,31 @@ export class ChangeRoleDialogComponent implements OnInit {
   }
 
   removeRoles() {
-    this.currentRoles?.forEach((role) => {
+    this.currentRoles()?.forEach((role) => {
       this.removeRole(role.name);
     });
   }
 
   private removeRole(roleName: string) {
     const removeRole: RemoveEmployeeRoleCommand = {
-      userId: this.userId,
+      userId: this.userId(),
       role: roleName,
     };
 
-    this.loading = true;
+    this.loading.set(true);
     this.apiService.removeRoleFromEmployee(removeRole).subscribe((result) => {
       if (result.success) {
         this.toastService.showSuccess(`Removed ${roleName} role from the employee`);
       }
 
-      this.loading = false;
+      this.loading.set(false);
     });
   }
 
   private fetchRoles() {
     this.userService.fetchRoles().subscribe((roles) => {
       if (roles) {
-        this.roles = roles;
+        this.roles.set(roles);
       }
     });
   }

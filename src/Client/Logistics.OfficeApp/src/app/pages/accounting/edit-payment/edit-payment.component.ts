@@ -1,22 +1,24 @@
-import {Component, input, OnInit, signal} from "@angular/core";
 import {CommonModule} from "@angular/common";
+import {Component, OnInit, input, signal} from "@angular/core";
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from "@angular/forms";
 import {Router, RouterModule} from "@angular/router";
 import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {ProgressSpinnerModule} from "primeng/progressspinner";
-import {DropdownModule} from "primeng/dropdown";
-import {CreatePaymentCommand, UpdatePaymentCommand} from "@/core/models";
-import {ApiService, ToastService} from "@/core/services";
-import {
-  PaymentMethod,
-  PaymentFor,
-  PaymentStatus,
-  PaymentStatusEnum,
-  PaymentMethodEnum,
-  PaymentForEnum,
-} from "@/core/enums";
+import {SelectModule} from "primeng/select";
 import {ValidationSummaryComponent} from "@/components";
+import {ApiService} from "@/core/api";
+import {
+  CreatePaymentCommand,
+  PaymentFor,
+  PaymentMethodType,
+  PaymentStatus,
+  UpdatePaymentCommand,
+  paymentForOptions,
+  paymentMethodTypeOptions,
+  paymentStatusOptions,
+} from "@/core/api/models";
+import {ToastService} from "@/core/services";
 
 @Component({
   selector: "app-edit-payment",
@@ -30,18 +32,18 @@ import {ValidationSummaryComponent} from "@/components";
     ProgressSpinnerModule,
     ReactiveFormsModule,
     RouterModule,
-    DropdownModule,
+    SelectModule,
     ValidationSummaryComponent,
   ],
 })
 export class EditPaymentComponent implements OnInit {
-  public readonly paymentStatuses = PaymentStatusEnum.toArray();
-  public readonly paymentMethods = PaymentMethodEnum.toArray();
-  public readonly paymentForValues = PaymentForEnum.toArray();
-  public readonly title = signal("Edit payment");
-  public readonly id = input<string>("");
-  public readonly isLoading = signal(false);
-  public readonly form: FormGroup<PaymentForm>;
+  readonly title = signal("Edit payment");
+  readonly id = input<string>("");
+  readonly isLoading = signal(false);
+  readonly form: FormGroup<PaymentForm>;
+  readonly paymentStatuses = paymentStatusOptions;
+  readonly paymentMethods = paymentMethodTypeOptions;
+  readonly paymentForValues = paymentForOptions;
 
   constructor(
     private readonly apiService: ApiService,
@@ -49,8 +51,8 @@ export class EditPaymentComponent implements OnInit {
     private readonly router: Router
   ) {
     this.form = new FormGroup<PaymentForm>({
-      comment: new FormControl<string>("", {validators: Validators.required, nonNullable: true}),
-      paymentMethod: new FormControl<PaymentMethod>(PaymentMethod.BankAccount, {
+      notes: new FormControl<string>("", {validators: Validators.required, nonNullable: true}),
+      paymentMethod: new FormControl<PaymentMethodType>(PaymentMethodType.UsBankAccount, {
         validators: Validators.required,
         nonNullable: true,
       }),
@@ -58,7 +60,7 @@ export class EditPaymentComponent implements OnInit {
         validators: Validators.compose([Validators.required, Validators.min(0.01)]),
         nonNullable: true,
       }),
-      paymentFor: new FormControl<PaymentFor>(PaymentFor.Payroll, {
+      paymentFor: new FormControl<PaymentFor>(PaymentFor.EmployeePayroll, {
         validators: Validators.required,
         nonNullable: true,
       }),
@@ -106,7 +108,7 @@ export class EditPaymentComponent implements OnInit {
           paymentFor: payment.paymentFor,
           paymentStatus: payment.status,
           amount: payment.amount,
-          comment: payment.comment,
+          notes: payment.notes,
         });
       }
 
@@ -121,7 +123,7 @@ export class EditPaymentComponent implements OnInit {
       amount: this.form.value.amount!,
       method: this.form.value.paymentMethod!,
       paymentFor: this.form.value.paymentFor!,
-      comment: this.form.value.comment,
+      notes: this.form.value.notes,
     };
 
     this.apiService.createPayment(command).subscribe((result) => {
@@ -142,7 +144,7 @@ export class EditPaymentComponent implements OnInit {
       amount: this.form.value.amount,
       method: this.form.value.paymentMethod,
       paymentFor: this.form.value.paymentFor,
-      comment: this.form.value.comment,
+      notes: this.form.value.notes,
       status: this.form.value.paymentStatus,
     };
 
@@ -158,9 +160,9 @@ export class EditPaymentComponent implements OnInit {
 }
 
 interface PaymentForm {
-  paymentMethod: FormControl<PaymentMethod>;
+  paymentMethod: FormControl<PaymentMethodType>;
   amount: FormControl<number>;
   paymentFor: FormControl<PaymentFor>;
   paymentStatus: FormControl<PaymentStatus>;
-  comment: FormControl<string>;
+  notes: FormControl<string>;
 }

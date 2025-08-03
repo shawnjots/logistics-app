@@ -45,7 +45,7 @@ internal class SeedData : BackgroundService
             _logger.LogInformation("Seeding data...");
             await AddAppRolesAsync(scope.ServiceProvider);
             await AddSuperAdminAsync(scope.ServiceProvider);
-            await AddSubscriptionPlanAsync(scope.ServiceProvider);
+            //await AddSubscriptionPlanAsync(scope.ServiceProvider);
             await AddDefaultTenantAsync(scope.ServiceProvider);
             _logger.LogInformation("Successfully seeded databases");
 
@@ -141,7 +141,7 @@ internal class SeedData : BackgroundService
         var standardPlan = new SubscriptionPlan
         {
             Name = "Standard",
-            Description = "Standard monthly subscription plan charging $30 per employee",
+            Description = "Standard monthly subscription plan charging per employee",
             Price = 30
         };
 
@@ -166,7 +166,7 @@ internal class SeedData : BackgroundService
         {
             Line1 = "7 Allstate Rd",
             City = "Dorchester",
-            Region = "Massachusetts",
+            State = "Massachusetts",
             ZipCode = "02125",
             Country = "United States"
         };
@@ -175,6 +175,7 @@ internal class SeedData : BackgroundService
         {
             Name = "default",
             CompanyName = "Test Company",
+            BillingEmail = "test@gmail.com",
             CompanyAddress = companyAddress,
             ConnectionString = defaultTenantConnectionString,
         };
@@ -228,7 +229,7 @@ internal class SeedData : BackgroundService
             AppRoles.SuperAdmin => AppRolePermissions.SuperAdmin,
             AppRoles.Admin => AppRolePermissions.Admin,
             AppRoles.Manager => AppRolePermissions.Manager,
-            _ => Enumerable.Empty<string>()
+            _ => []
         };
     }
 }

@@ -8,5 +8,7 @@ public class CreateTenantCommand : IRequest<Result>
 {
     public string Name { get; set; } = null!;
     public string? CompanyName { get; set; }
+    public string? BillingEmail { get; set; }
+    public string? DotNumber { get; set; }
     public Address? CompanyAddress { get; set; }
 }

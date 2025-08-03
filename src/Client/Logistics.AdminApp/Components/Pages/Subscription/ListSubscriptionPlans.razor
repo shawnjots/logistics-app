@@ -34,6 +34,21 @@
             </Template>
         </RadzenDataGridColumn>
         <RadzenDataGridColumn 
+            TItem="SubscriptionPlanDto"
+            Property="HasTrial"
+            Title="Has Trial">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn
+            TItem="SubscriptionPlanDto"
+            Property="StripeProductId"
+            Title="Stripe Product ID">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn
+            TItem="SubscriptionPlanDto"
+            Property="StripePriceId"
+            Title="Stripe Price ID">
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn 
             TItem="SubscriptionPlanDto" 
             Title="Action">
             <Template Context="subscriptionPlan">
