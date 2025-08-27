@@ -1,12 +1,11 @@
-﻿using Logistics.Shared.Models;
-using Logistics.Shared.Consts;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
 
 namespace Logistics.Application.Commands;
 
-public class CreateEmployeeCommand : IRequest<Result>
+public class CreateEmployeeCommand : IAppRequest
 {
-    public string UserId { get; set; } = null!;
+    public Guid UserId { get; set; }
     public string? Role { get; set; }
     public decimal Salary { get; set; }
     public SalaryType SalaryType { get; set; }

@@ -1,11 +1,10 @@
-﻿using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
 
 namespace Logistics.Application.Commands;
 
-public class UpdateLoadProximityCommand : IRequest<Result>
+public class UpdateLoadProximityCommand : IAppRequest
 {
-    public string LoadId { get; set; } = null!;
+    public Guid LoadId { get; set; }
     public bool? CanConfirmPickUp { get; set; }
     public bool? CanConfirmDelivery { get; set; }
 }

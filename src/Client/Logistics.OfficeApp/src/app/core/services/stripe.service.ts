@@ -1,4 +1,4 @@
-import {Injectable} from "@angular/core";
+import {Injectable, inject} from "@angular/core";
 import {
   Address,
   SetupIntentResult,
@@ -8,23 +8,21 @@ import {
   loadStripe,
 } from "@stripe/stripe-js";
 import {firstValueFrom} from "rxjs";
-import {environment} from "src/environments/environment";
+import {environment} from "@/env";
+import {COUNTRIES_OPTIONS} from "@/shared/constants";
+import {UsBankAccount} from "@/shared/models";
+import {findOption} from "@/shared/utils";
 import {ApiService} from "../api";
 import {AddressDto} from "../api/models";
-import {COUNTRIES_OPTIONS} from "../constants";
-import {UsBankAccount} from "../types";
-import {findOption} from "../utilities";
 import {TenantService} from "./tenant.service";
 
 @Injectable({providedIn: "root"})
 export class StripeService {
+  private readonly apiService = inject(ApiService);
+  private readonly tenantService = inject(TenantService);
+
   private stripe: Stripe | null = null;
   private elements: StripeElements | null = null;
-
-  constructor(
-    private readonly apiService: ApiService,
-    private readonly tenantService: TenantService
-  ) {}
 
   /**
    * Creates and returns a Stripe Elements instance with a setup intent client secret.

@@ -1,13 +1,5 @@
-﻿using Logistics.Domain.Core;
+using Logistics.Domain.Core;
 
 namespace Logistics.Domain.Events;
 
-public class NewLoadCreatedEvent : IDomainEvent
-{
-    public NewLoadCreatedEvent(ulong loadRefId)
-    {
-        LoadRefId = loadRefId;
-    }
-    
-    public ulong LoadRefId { get; }
-}
+public record NewLoadCreatedEvent(Guid LoadId) : IDomainEvent;

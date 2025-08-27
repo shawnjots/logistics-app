@@ -1,0 +1,56 @@
+<h1 class="text-center">Renew subscription</h1>
+<hr class="w-full" />
+
+<div class="flex-column flex gap-2">
+  <div class="col-12">
+    <p-card header="Current Plan">
+      <div class="row">
+        <div class="fw-bold col-6">Plan Name:</div>
+        <div class="col-6">{{ subscription()?.plan?.name }}</div>
+
+        <div class="fw-bold col-6">Price per Employee:</div>
+        <div class="col-6">{{ subscription()?.plan?.price | currency }}</div>
+
+        <div class="fw-bold col-6">Number of Employees:</div>
+        <div class="col-6">{{ employeeCount() }}</div>
+
+        <div class="fw-bold col-6">Total Price:</div>
+        <div class="col-6">{{ calcTotalSubscriptionCost() | currency }}</div>
+
+        @if (subscription()?.endDate) {
+          <div class="fw-bold col-6">End Date:</div>
+          <div class="col-6">{{ subscription()?.endDate | date }}</div>
+        }
+
+        <div class="fw-bold col-6">Status:</div>
+        <div class="col-6">
+          <p-tag [severity]="getSubStatusSeverity()" styleClass="text-center">
+            {{ getSubStatusLabel() }}
+          </p-tag>
+        </div>
+      </div>
+
+      <ng-template #footer>
+        <div class="flex gap-2">
+          <!-- <p-button
+            [routerLink]="'/subscription/plans'"
+            label="Change Plan"
+            icon="pi pi-credit-card"
+          /> -->
+          <p-button
+            label="Renew"
+            icon="pi pi-credit-card"
+            [disabled]="isLoading()"
+            [loading]="isLoading()"
+            (click)="confirmRenewSubscription()"
+          />
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+
+  <!-- Payment Methods Card -->
+  <div class="col-12">
+    <app-payment-methods-card />
+  </div>
+</div>

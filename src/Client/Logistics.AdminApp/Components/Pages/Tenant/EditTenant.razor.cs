@@ -1,5 +1,6 @@
-﻿using Logistics.Shared.Models;
-using Logistics.Shared.Consts.Policies;
+using Logistics.Shared.Identity.Policies;
+using Logistics.Shared.Models;
+
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Components;
 
@@ -9,26 +10,26 @@ namespace Logistics.AdminApp.Components.Pages.Tenant;
 public partial class EditTenant : PageBase
 {
     private TenantDto _tenant = new();
-    
-    
+
+
     #region Parameters
 
     [Parameter]
     public string? Id { get; set; }
 
-    [Parameter] 
+    [Parameter]
     public bool EditMode { get; set; } = true;
 
     #endregion
-    
+
 
     #region Injectable services
 
-    [Inject] 
+    [Inject]
     private NavigationManager Navigation { get; set; } = default!;
 
     #endregion
-    
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -51,10 +52,10 @@ public partial class EditTenant : PageBase
     private async Task SubmitAsync()
     {
         IsLoading = true;
-        
+
         if (EditMode)
         {
-            var success = await CallApiAsync(api => api.UpdateTenantAsync(new UpdateTenant
+            var success = await CallApiAsync(api => api.UpdateTenantAsync(new UpdateTenantCommand
             {
                 Id = _tenant.Id,
                 CompanyName = _tenant.CompanyName,
@@ -66,12 +67,12 @@ public partial class EditTenant : PageBase
             {
                 return;
             }
-            
+
             ShowNotification("Tenant has been saved successfully");
         }
         else
         {
-            var success = await CallApiAsync(api => api.CreateTenantAsync(new CreateTenant
+            var success = await CallApiAsync(api => api.CreateTenantAsync(new CreateTenantCommand
             {
                 Name = _tenant.Name,
                 CompanyName = _tenant.CompanyName

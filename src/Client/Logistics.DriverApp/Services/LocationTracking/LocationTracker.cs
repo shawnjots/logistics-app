@@ -1,6 +1,7 @@
-﻿using Logistics.HttpClient.Options;
+using Logistics.Domain.Primitives.ValueObjects;
 using Logistics.DriverApp.Services.Authentication;
-using Logistics.Shared.Models;
+using Logistics.HttpClient.Options;
+
 using Microsoft.AspNetCore.SignalR.Client;
 
 namespace Logistics.DriverApp.Services.LocationTracking;
@@ -27,7 +28,7 @@ public class LocationTracker : ILocationTracker
     {
         if (_isConnected)
             return;
-        
+
         await _hubConnection.StartAsync();
         _isConnected = true;
     }
@@ -36,7 +37,7 @@ public class LocationTracker : ILocationTracker
     {
         if (!_isConnected)
             return;
-        
+
         await _hubConnection.DisposeAsync();
         _isConnected = false;
     }
@@ -45,29 +46,28 @@ public class LocationTracker : ILocationTracker
     {
         try
         {
-            if (string.IsNullOrEmpty(options.TruckId) || string.IsNullOrEmpty(options.TenantId))
+            if (!options.TruckId.HasValue || !options.TenantId.HasValue)
             {
-                return default;
+                return null;
             }
-        
+
             await ConnectAsync();
             var location = await GetCurrentLocationAsync();
 
             if (location is null)
             {
-                return default;
+                return null;
             }
 
             var address = await GetAddressFromGeocodeAsync(location.Latitude, location.Longitude);
-            
+
             var geolocationData = new TruckGeolocationDto
             {
-                TruckId = options.TruckId,
+                TruckId = options.TruckId.Value,
                 TruckNumber = options.TruckNumber,
-                TenantId = options.TenantId,
+                TenantId = options.TenantId.Value,
                 DriversName = options.DriversName,
-                Latitude = location.Latitude,
-                Longitude = location.Longitude,
+                CurrentLocation = new GeoPoint(location.Longitude, location.Latitude),
                 CurrentAddress = address
             };
             await _hubConnection.InvokeAsync("SendGeolocationData", geolocationData);
@@ -79,7 +79,7 @@ public class LocationTracker : ILocationTracker
             return default;
         }
     }
-    
+
     private static async Task<Location?> GetCurrentLocationAsync()
     {
         try
@@ -95,16 +95,16 @@ public class LocationTracker : ILocationTracker
         }
     }
 
-    private static async Task<AddressDto?> GetAddressFromGeocodeAsync(double latitude, double longitude)
+    private static async Task<Address?> GetAddressFromGeocodeAsync(double latitude, double longitude)
     {
         try
         {
             var placemarks = await Geocoding.Default.GetPlacemarksAsync(latitude, longitude);
             var placemark = placemarks.FirstOrDefault();
-        
+
             if (placemark != null)
             {
-                return new AddressDto
+                return new Address
                 {
                     Line1 = placemark.SubThoroughfare,
                     Line2 = placemark.Thoroughfare,

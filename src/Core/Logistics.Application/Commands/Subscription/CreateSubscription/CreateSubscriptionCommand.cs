@@ -1,10 +1,9 @@
-﻿using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
 
 namespace Logistics.Application.Commands;
 
-public class CreateSubscriptionCommand : IRequest<Result>
+public class CreateSubscriptionCommand : IAppRequest
 {
-    public string TenantId { get; set; } = null!;
-    public string PlanId { get; set; } = null!;
+    public Guid TenantId { get; set; }
+    public Guid PlanId { get; set; }
 }

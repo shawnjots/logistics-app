@@ -1,21 +1,22 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Mappings;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Queries;
 
-internal sealed class GetTruckHandler : RequestHandler<GetTruckQuery, Result<TruckDto>>
+internal sealed class GetTruckHandler : IAppRequestHandler<GetTruckQuery, Result<TruckDto>>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public GetTruckHandler(ITenantUnityOfWork tenantUow)
+    public GetTruckHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result<TruckDto>> HandleValidated(
-        GetTruckQuery req, CancellationToken cancellationToken)
+    public async Task<Result<TruckDto>> Handle(
+        GetTruckQuery req, CancellationToken ct)
     {
         var truckEntity = await TryGetTruck(req.TruckOrDriverId);
 
@@ -25,39 +26,40 @@ internal sealed class GetTruckHandler : RequestHandler<GetTruckQuery, Result<Tru
         }
 
         var truckDto = ConvertToDto(truckEntity, req.IncludeLoads, req.OnlyActiveLoads);
-        return Result<TruckDto>.Succeed(truckDto);
+        return Result<TruckDto>.Ok(truckDto);
     }
 
-    private async Task<Truck?> TryGetTruck(string? truckOrDriverId)
+    private async Task<Truck?> TryGetTruck(Guid? truckOrDriverId)
     {
-        if (string.IsNullOrEmpty(truckOrDriverId))
+        if (!truckOrDriverId.HasValue)
+        {
             return null;
+        }
 
-        var truckRepository = _tenantUow.Repository<Truck>();
-        var truck = await truckRepository.GetAsync(i => i.Id == truckOrDriverId);
-        return truck ?? await GetTruckFromDriver(truckOrDriverId);
+        var truck = await _tenantUow.Repository<Truck>().GetAsync(i => i.Id == truckOrDriverId);
+        return truck ?? await GetTruckFromDriver(truckOrDriverId.Value);
     }
 
-    private async Task<Truck?> GetTruckFromDriver(string userId)
+    private Task<Truck?> GetTruckFromDriver(Guid userId)
     {
-        var employeeRepository = _tenantUow.Repository<Employee>();
-        var driver = await employeeRepository.GetByIdAsync(userId);
-        return driver?.Truck;
+        return _tenantUow.Repository<Truck>().GetAsync(i => i.MainDriverId == userId || i.SecondaryDriverId == userId);
     }
 
     private static TruckDto ConvertToDto(Truck truckEntity, bool includeLoads, bool onlyActiveLoads)
     {
         var truckDto = truckEntity.ToDto(new List<LoadDto>());
 
-        if (!includeLoads) 
+        if (!includeLoads)
+        {
             return truckDto;
-        
+        }
+
         var loads = truckEntity.Loads.Select(l => l.ToDto());
         if (onlyActiveLoads)
         {
-            loads = loads.Where(l => l.DeliveryDate == null);
+            loads = loads.Where(l => l.DeliveredAt == null);
         }
-        
+
         truckDto.Loads = loads.ToArray();
         return truckDto;
     }

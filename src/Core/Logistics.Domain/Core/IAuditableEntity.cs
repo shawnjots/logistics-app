@@ -1,9 +1,12 @@
-﻿namespace Logistics.Domain.Core;
+namespace Logistics.Domain.Core;
 
+/// <summary>
+///     Base interface for auditable entities.
+/// </summary>
 public interface IAuditableEntity
 {
-    DateTime Created { get; set; }
+    DateTime CreatedAt { get; set; }
     string? CreatedBy { get; set; }
-    DateTime? LastModified { get; set; }
-    string? LastModifiedBy { get; set; }
+    DateTime? UpdatedAt { get; set; }
+    string? UpdatedBy { get; set; }
 }

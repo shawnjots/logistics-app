@@ -1,0 +1,57 @@
+@if (disabled()) {
+  <div class="mb-4 flex">
+    <p-message severity="info">
+      You cannot edit this trip because it is not in the 'Planned' status. Only the trip name can be
+      edited.
+    </p-message>
+  </div>
+}
+
+<p-stepper [linear]="true" [value]="activeStep()" (valueChange)="activeStep.set($event ?? 1)">
+  <p-step-list>
+    <p-step [value]="1">Basic Info</p-step>
+    <p-step [value]="2">Loads</p-step>
+    <p-step [value]="3">Review</p-step>
+  </p-step-list>
+  <p-step-panels>
+    <p-step-panel [value]="1">
+      <ng-template #content let-activateCallback="activateCallback">
+        <!-- Basic info form-->
+        <app-trip-form-step-basic
+          [initialData]="initialData()"
+          [disabled]="disabled()"
+          (next)="processBasicStep($event)"
+        />
+      </ng-template>
+    </p-step-panel>
+    <p-step-panel [value]="2">
+      <ng-template #content let-activateCallback="activateCallback">
+        <!-- Loads table -->
+        <app-trip-form-step-loads
+          [truckId]="formValue()?.truckId"
+          [initialData]="initialData()?.initialLoads ?? null"
+          [disabled]="disabled()"
+          (back)="activateCallback(1)"
+          (next)="processLoadsStep($event)"
+        />
+      </ng-template>
+    </p-step-panel>
+    <p-step-panel [value]="3">
+      <ng-template #content let-activateCallback="activateCallback">
+        <!-- Review step -->
+        <app-trip-form-step-review
+          [mode]="mode()"
+          [tripName]="formValue()?.name"
+          [truckId]="formValue()?.truckId"
+          [newLoadsCount]="formValue()?.newLoads?.length ?? 0"
+          [totalLoads]="formValue()?.totalLoads ?? 0"
+          [totalCost]="formValue()?.totalCost ?? 0"
+          [totalDistance]="formValue()?.totalDistance ?? 0"
+          [stops]="formValue()?.stops ?? initialData()?.initialStops ?? []"
+          (back)="activateCallback(2)"
+          (save)="processReviewStep()"
+        />
+      </ng-template>
+    </p-step-panel>
+  </p-step-panels>
+</p-stepper>

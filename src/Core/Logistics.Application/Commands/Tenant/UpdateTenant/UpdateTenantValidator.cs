@@ -1,5 +1,6 @@
-﻿using FluentValidation;
-using Logistics.Shared.Consts;
+using FluentValidation;
+
+using Logistics.Application.Constants;
 
 namespace Logistics.Application.Commands;
 
@@ -9,11 +10,11 @@ internal sealed class UpdateTenantValidator : AbstractValidator<UpdateTenantComm
     {
         RuleFor(i => i.Id)
             .NotEmpty();
-        
+
         RuleFor(i => i.Name)
             .MinimumLength(4)
             .Matches(RegexPatterns.TenantName);
-        
+
         RuleFor(i => i.BillingEmail)
             .EmailAddress();
     }

@@ -1,7 +1,7 @@
-﻿namespace Logistics.Shared.Models;
+namespace Logistics.Shared.Models;
 
-public class SetDeviceToken
+public record SetDeviceToken
 {
-    public string? UserId { get; set; }
+    public Guid? UserId { get; set; }
     public string? DeviceToken { get; set; }
 }

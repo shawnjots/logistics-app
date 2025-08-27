@@ -1,16 +1,17 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
+
 using Logistics.Domain.Core;
 
 namespace Logistics.Domain.Entities;
 
-public class EmployeeTenantRole : IEntity<string>, ITenantEntity
+public class EmployeeTenantRole : IEntity<Guid>, ITenantEntity
 {
     [NotMapped]
-    public string Id { get; set; } = Guid.NewGuid().ToString();
-    
-    public string EmployeeId { get; set; } = null!;
+    public Guid Id { get; set; } = Guid.NewGuid();
+
+    public Guid EmployeeId { get; set; }
     public virtual Employee Employee { get; set; } = null!;
-    
-    public string RoleId { get; set; } = null!;
+
+    public Guid RoleId { get; set; }
     public virtual TenantRole Role { get; set; } = null!;
 }

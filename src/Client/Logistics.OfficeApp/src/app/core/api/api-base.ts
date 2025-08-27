@@ -2,18 +2,15 @@ import {HttpClient} from "@angular/common/http";
 import {inject} from "@angular/core";
 import {Observable, catchError, of} from "rxjs";
 import {ToastService} from "../services";
+import {API_CONFIG} from "./api.provider";
 import {PagedIntervalQuery, SearchableQuery} from "./models";
 
 export abstract class ApiBase {
-  private readonly headers = {"content-type": "application/json"};
+  private readonly http = inject(HttpClient);
   private readonly toastService = inject(ToastService);
-  protected readonly http: HttpClient;
-  protected readonly apiUrl: string;
-
-  constructor(apiUrl: string, http: HttpClient) {
-    this.apiUrl = apiUrl;
-    this.http = http;
-  }
+  private readonly apiConfig = inject(API_CONFIG);
+  private readonly headers = {"content-type": "application/json"};
+  protected readonly apiUrl = this.apiConfig.baseUrl;
 
   /**
    * Utility function to parse the sort property from the query string.
@@ -25,7 +22,7 @@ export abstract class ApiBase {
       const sortProperty = this.parseSortProperty("name", -1); // returns "-name"
     ``` 
    */
-  parseSortProperty(sortField?: string | null, sortOrder?: number | null): string {
+  formatSortField(sortField?: string | null, sortOrder?: number | null): string {
     if (!sortOrder) {
       sortOrder = 1;
     }
@@ -65,11 +62,42 @@ export abstract class ApiBase {
       .pipe(catchError((err) => this.handleError(err)));
   }
 
+  /**
+   * Converts a query object to a query string.
+   * @param query The query object to convert.
+   * @returns The query string representation of the object.
+   * @example
+   * ```typescript
+   * const query = {name: "John", age: 30};
+   * const queryString = this.stringfyQuery(query); // returns "name=John&age=30"
+   * ```
+   */
+  protected stringfyQuery(query?: object): string {
+    if (!query) {
+      return "";
+    }
+
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(query)) {
+      if (value === undefined) {
+        continue;
+      }
+
+      if (value instanceof Date) {
+        params.set(key, value.toJSON());
+      } else {
+        params.set(key, value.toString());
+      }
+    }
+    return params.toString();
+  }
+
   protected stringfySearchableQuery(query?: SearchableQuery): string {
     const {search = "", orderBy = "", page = 1, pageSize = 10} = query || {};
+
     return new URLSearchParams({
       search,
-      orderBy,
+      orderBy: orderBy,
       page: page.toString(),
       pageSize: pageSize.toString(),
     }).toString();
@@ -89,7 +117,7 @@ export abstract class ApiBase {
 
     const params = new URLSearchParams({
       startDate: startDate.toJSON(),
-      orderBy,
+      orderBy: orderBy,
       page: page.toString(),
       pageSize: pageSize.toString(),
       ...filteredAdditionalParams,

@@ -1,13 +1,17 @@
-import {AddressDto} from "../address.model";
+import {AddressDto} from "../address.dto";
 import {EmployeeDto} from "../employee/employee.model";
-import {LoadDto} from "../load/load.model";
+import {GeoPointDto} from "../geo-point.dto";
+import {LoadDto} from "../load/load.dto";
+import {TruckStatus, TruckType} from "./enums";
 
 export interface TruckDto {
   id: string;
-  truckNumber: string;
-  drivers: EmployeeDto[];
-  currentLocation?: AddressDto;
-  currentLocationLat?: number;
-  currentLocationLong?: number;
+  number: string;
+  type: TruckType;
+  status: TruckStatus;
+  mainDriver?: EmployeeDto;
+  secondaryDriver?: EmployeeDto;
+  currentAddress?: AddressDto;
+  currentLocation?: GeoPointDto;
   loads?: LoadDto[];
 }

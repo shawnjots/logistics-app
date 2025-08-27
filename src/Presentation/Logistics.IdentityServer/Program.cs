@@ -1,4 +1,5 @@
-﻿using Logistics.IdentityServer;
+using Logistics.IdentityServer;
+
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -10,6 +11,7 @@ Log.Information("Starting up");
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    builder.AddServiceDefaults();
 
     builder.Host.UseSerilog((ctx, lc) => lc
         .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] {SourceContext}{NewLine}{Message:lj}{NewLine}{Exception}{NewLine}")
@@ -19,6 +21,7 @@ try
     var app = builder
         .ConfigureServices()
         .ConfigurePipeline();
+    app.MapDefaultEndpoints();
 
     app.Run();
 }

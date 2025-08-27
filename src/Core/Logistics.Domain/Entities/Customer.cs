@@ -1,10 +1,13 @@
-﻿using Logistics.Domain.Core;
+using Logistics.Domain.Core;
 
 namespace Logistics.Domain.Entities;
 
+/// <summary>
+/// Company's customer (e.g. broker, shipper, etc.).
+/// </summary>
 public class Customer : Entity, ITenantEntity
 {
-    public string Name { get; set; } = null!;
+    public required string Name { get; set; }
 
-    public virtual List<Invoice> Invoices { get; set; } = new();
+    public virtual List<LoadInvoice> Invoices { get; set; } = [];
 }

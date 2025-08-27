@@ -1,53 +1,57 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Specifications;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Extensions;
 using Logistics.Domain.Persistence;
-using Logistics.Domain.Specifications;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Queries;
 
-internal sealed class GetMonthlyGrossesHandler : RequestHandler<GetMonthlyGrossesQuery, Result<MonthlyGrossesDto>>
+internal sealed class GetMonthlyGrossesHandler : IAppRequestHandler<GetMonthlyGrossesQuery, Result<MonthlyGrossesDto>>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public GetMonthlyGrossesHandler(ITenantUnityOfWork tenantUow)
+    public GetMonthlyGrossesHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result<MonthlyGrossesDto>> HandleValidated(
-        GetMonthlyGrossesQuery req, CancellationToken cancellationToken)
+    public async Task<Result<MonthlyGrossesDto>> Handle(
+        GetMonthlyGrossesQuery req, CancellationToken ct)
     {
         var truckId = req.TruckId;
-        
-        if (!string.IsNullOrEmpty(req.UserId))
-        {
-            var driver = await _tenantUow.Repository<Employee>().GetByIdAsync(req.UserId);
 
-            if (driver is null)
+        if (req.UserId.HasValue)
+        {
+            var truck = await _tenantUow.Repository<Truck>().GetAsync(i => i.MainDriverId == req.UserId.Value ||
+                                                                           i.SecondaryDriverId == req.UserId.Value);
+
+            if (truck is null)
             {
-                return Result<MonthlyGrossesDto>.Fail($"Could not find user with ID '{req.UserId}'");
+                return Result<MonthlyGrossesDto>.Fail($"Could not find a truck with driver ID '{req.UserId}'");
             }
-            
-            truckId = driver.TruckId;
+
+            truckId = truck.Id;
         }
-        
+
         var spec = new FilterLoadsByDeliveryDate(truckId, req.StartDate, req.EndDate);
         var months = req.StartDate.MonthsBetween(req.EndDate);
         var filteredLoads = _tenantUow.Repository<Load>().ApplySpecification(spec).ToArray();
 
         var dict = months.ToDictionary(
-            k => (k.Year, k.Month), 
+            k => (k.Year, k.Month),
             m => new MonthlyGrossDto(m.Year, m.Month));
 
         foreach (var load in filteredLoads)
         {
-            var date = load.DeliveryDate!.Value;
+            var date = load.DeliveredAt!.Value;
             var key = (date.Year, date.Month);
-            
-            if (!dict.ContainsKey(key)) 
+
+            if (!dict.ContainsKey(key))
+            {
                 continue;
-            
+            }
+
             dict[key].Distance += load.Distance;
             dict[key].Gross += load.DeliveryCost;
             dict[key].DriverShare += load.CalcDriverShare();
@@ -57,6 +61,6 @@ internal sealed class GetMonthlyGrossesHandler : RequestHandler<GetMonthlyGrosse
         {
             Data = dict.Values
         };
-        return Result<MonthlyGrossesDto>.Succeed(monthlyGrosses);
+        return Result<MonthlyGrossesDto>.Ok(monthlyGrosses);
     }
 }

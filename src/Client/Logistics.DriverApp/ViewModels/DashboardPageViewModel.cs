@@ -1,12 +1,14 @@
-﻿using System.Collections.ObjectModel;
+using System.Collections.ObjectModel;
+
 using CommunityToolkit.Mvvm.Messaging;
+
 using Logistics.DriverApp.Consts;
 using Logistics.DriverApp.Messages;
 using Logistics.DriverApp.Models;
 using Logistics.DriverApp.Services;
 using Logistics.DriverApp.Services.Authentication;
 using Logistics.DriverApp.Services.LocationTracking;
-using Logistics.Shared.Models;
+
 using Plugin.Firebase.CloudMessaging;
 using Plugin.Firebase.CloudMessaging.EventArgs;
 
@@ -20,7 +22,7 @@ public class DashboardPageViewModel : BaseViewModel
     private readonly ICache _cache;
 
     public DashboardPageViewModel(
-        IApiClient apiClient, 
+        IApiClient apiClient,
         IAuthService authService,
         ILocationTrackerBackgroundService locationTrackerBackgroundService,
         ICache cache)
@@ -29,21 +31,21 @@ public class DashboardPageViewModel : BaseViewModel
         _authService = authService;
         _locationTrackerBackgroundService = locationTrackerBackgroundService;
         _cache = cache;
-        OpenLoadPageCommand = new AsyncRelayCommand<string?>(OpenLoadPageAsync);
+        OpenLoadPageCommand = new AsyncRelayCommand<Guid?>(OpenLoadPageAsync);
         CrossFirebaseCloudMessaging.Current.NotificationReceived += HandleLoadNotificationReceived;
-        
+
         Messenger.Register<TenantIdChangedMessage>(this, async (_, _) =>
         {
             await MainThread.InvokeOnMainThreadAsync(FetchTruckDataAsync);
         });
-        
+
         Messenger.Register<ActiveLoadsRequestMessage>(this, (_, m) => m.Reply(Loads));
     }
 
-    
+
     #region Commands
 
-    public IAsyncRelayCommand<string?> OpenLoadPageCommand { get; }
+    public IAsyncRelayCommand<Guid?> OpenLoadPageCommand { get; }
 
     #endregion
 
@@ -72,10 +74,10 @@ public class DashboardPageViewModel : BaseViewModel
         get => _teammatesName;
         set => SetProperty(ref _teammatesName, value);
     }
-    
+
     #endregion
 
-    
+
     protected override async Task OnInitializedAsync()
     {
         DriverName = _authService.User?.GetFullName();
@@ -87,9 +89,9 @@ public class DashboardPageViewModel : BaseViewModel
     private void TryStartLocationTrackerService()
     {
         var tenantId = _authService.User?.TenantId;
-        var truckId = _cache.Get<string>(CacheKeys.TruckId);
+        var truckId = _cache.Get<Guid?>(CacheKeys.TruckId);
 
-        if (string.IsNullOrEmpty(tenantId) || string.IsNullOrEmpty(truckId))
+        if (!tenantId.HasValue || !truckId.HasValue)
         {
             return;
         }
@@ -103,9 +105,9 @@ public class DashboardPageViewModel : BaseViewModel
         });
     }
 
-    private async Task OpenLoadPageAsync(string? loadId)
+    private async Task OpenLoadPageAsync(Guid? loadId)
     {
-        if (string.IsNullOrEmpty(loadId))
+        if (!loadId.HasValue)
         {
             return;
         }
@@ -126,16 +128,16 @@ public class DashboardPageViewModel : BaseViewModel
         IsLoading = true;
         var driverId = _authService.User?.Id;
 
-        if (string.IsNullOrEmpty(driverId))
+        if (!driverId.HasValue)
         {
             await PopupHelpers.ShowErrorAsync("Failed to load driver data, try again");
             IsLoading = false;
             return;
         }
-        
+
         var result = await _apiClient.GetTruckAsync(new GetTruckQuery
         {
-            TruckOrDriverId = driverId,
+            TruckOrDriverId = driverId.Value,
             IncludeLoads = true,
             OnlyActiveLoads = true,
         });
@@ -148,9 +150,16 @@ public class DashboardPageViewModel : BaseViewModel
         }
 
         var truck = result.Data!;
-        var teammates = truck.Drivers.Where(i => i.Id != driverId).Select(i => i.FullName);
-        TruckNumber = truck.TruckNumber;
-        TeammatesName = string.Join(", ", teammates); 
+        var teammateNames = new List<string>();
+
+        if (truck.MainDriver is not null && truck.MainDriver.Id != driverId)
+            teammateNames.Add(truck.MainDriver.FullName!);
+
+        if (truck.SecondaryDriver is not null && truck.SecondaryDriver.Id != driverId)
+            teammateNames.Add(truck.SecondaryDriver.FullName!);
+
+        TruckNumber = truck.Number;
+        TeammatesName = string.Join(", ", teammateNames);
         _cache.Set(CacheKeys.TruckId, truck.Id);
 
         AddActiveLoads(truck.Loads);
@@ -161,7 +170,7 @@ public class DashboardPageViewModel : BaseViewModel
     {
         IsLoading = true;
         var driverId = _authService.User?.Id!;
-        var result = await _apiClient.GetDriverActiveLoadsAsync(driverId);
+        var result = await _apiClient.GetDriverActiveLoadsAsync(driverId.Value);
 
         if (!result.Success)
         {
@@ -169,11 +178,11 @@ public class DashboardPageViewModel : BaseViewModel
             IsLoading = false;
             return;
         }
-        
+
         AddActiveLoads(result.Data!);
         IsLoading = false;
     }
-    
+
     private async Task SendDeviceTokenAsync()
     {
         await CrossFirebaseCloudMessaging.Current.CheckIfValidAsync();
@@ -182,14 +191,14 @@ public class DashboardPageViewModel : BaseViewModel
 
         if (!string.IsNullOrEmpty(token))
         {
-            await _apiClient.SetDeviceTokenAsync(new SetDeviceToken {UserId = driverId, DeviceToken = token});
+            await _apiClient.SetDeviceTokenAsync(new SetDeviceToken { UserId = driverId, DeviceToken = token });
         }
     }
 
     private void AddActiveLoads(IEnumerable<LoadDto> loads)
     {
         var loadsArr = loads.ToArray();
-        
+
         // Update or add loads
         foreach (var loadDto in loadsArr)
         {
@@ -210,11 +219,11 @@ public class DashboardPageViewModel : BaseViewModel
         {
             Loads.Remove(loadToRemove);
         }
-        
+
         OnPropertyChanged(nameof(Loads));
     }
-    
-    
+
+
     #region Event handlers
 
     private async void HandleLoadNotificationReceived(object? sender, FCMNotificationReceivedEventArgs e)

@@ -1,0 +1,36 @@
+<div class="sidebar" [ngClass]="{minimized: !isOpened()}">
+  <a class="navbar-brand border-bottom p-2">
+    <img src="images/logo.svg" class="img-fluid" height="40" alt="logo" />
+    @if (isOpened()) {
+      <span class="h4">{{ companyName() }}</span>
+    }
+  </a>
+
+  <ul class="nav flex-column mb-auto">
+    <li>
+      <app-panel-menu [items]="navItems()" [(expanded)]="isOpened" />
+    </li>
+    <li>
+      <a class="nav-link border-bottom">
+        <i
+          [class]="isOpened() ? 'pi pi-arrow-left text-3xl!' : 'pi pi-arrow-right text-3xl!'"
+          (click)="toggle()"
+          [pTooltip]="isOpened() ? 'Minimize menu' : 'Maximize menu'"
+          role="presentation"
+        ></i>
+      </a>
+    </li>
+  </ul>
+
+  @if (userFullName()) {
+    <div class="flex-column border-top flex" [class.items-center]="!isOpened()">
+      @if (userRole() && isOpened()) {
+        <div class="user-select-none px-3 py-2 text-left">
+          Role: <span class="fw-bold">{{ userRole() }}</span>
+        </div>
+      }
+
+      <app-panel-menu [items]="profileMenuItems" [(expanded)]="isOpened" class="w-full" />
+    </div>
+  }
+</div>

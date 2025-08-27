@@ -1,19 +1,17 @@
-import {Injectable} from "@angular/core";
+import {Injectable, inject} from "@angular/core";
 import {EventTypes, OidcSecurityService, PublicEventsService} from "angular-auth-oidc-client";
 import {Observable, filter, map} from "rxjs";
 import {TenantService} from "@/core/services";
-import {userRoleOptions} from "../enums";
+import {userRoleOptions} from "../../shared/models";
 import {UserData} from "./user-data";
 
 @Injectable({providedIn: "root"})
 export class AuthService {
-  private userData: UserData | null = null;
+  private readonly oidcService = inject(OidcSecurityService);
+  private readonly eventService = inject(PublicEventsService);
+  private readonly tenantService = inject(TenantService);
 
-  constructor(
-    private readonly oidcService: OidcSecurityService,
-    private readonly eventService: PublicEventsService,
-    private readonly tenantService: TenantService
-  ) {}
+  private userData: UserData | null = null;
 
   /**
    * Register for the event that is emitted when the user is authenticated
@@ -83,7 +81,6 @@ export class AuthService {
         }
 
         console.log("User data:", this.userData);
-        console.log("Access token:", response.accessToken);
         return response.isAuthenticated;
       })
     );

@@ -17,38 +17,30 @@ export const appRoutes: Routes = [
   },
   {
     path: "employees",
-    loadChildren: () => import("./pages/employee/employee.routes").then((m) => m.employeeRoutes),
+    loadChildren: () => import("./pages/employees/employee.routes").then((m) => m.employeeRoutes),
     data: {
       breadcrumb: "Employees",
     },
   },
   {
     path: "loads",
-    loadChildren: () => import("./pages/load/load.routes").then((m) => m.loadRoutes),
+    loadChildren: () => import("./pages/loads/load.routes").then((m) => m.loadRoutes),
     data: {
       breadcrumb: "Loads",
     },
   },
   {
     path: "trucks",
-    loadChildren: () => import("./pages/truck/truck.routes").then((m) => m.truckRoutes),
+    loadChildren: () => import("./pages/trucks/truck.routes").then((m) => m.truckRoutes),
     data: {
       breadcrumb: "Trucks",
     },
   },
   {
     path: "customers",
-    loadChildren: () => import("./pages/customer/customer.routes").then((m) => m.customerRoutes),
+    loadChildren: () => import("./pages/customers/customer.routes").then((m) => m.customerRoutes),
     data: {
       breadcrumb: "Customers",
-    },
-  },
-  {
-    path: "accounting",
-    loadChildren: () =>
-      import("./pages/accounting/accounting.routes").then((m) => m.accountingRoutes),
-    data: {
-      breadcrumb: "",
     },
   },
   {
@@ -59,9 +51,20 @@ export const appRoutes: Routes = [
     },
   },
   {
+    path: "invoices",
+    loadChildren: () => import("./pages/invoices/invoice.routes").then((m) => m.invoiceRoutes),
+    data: {
+      breadcrumb: "",
+    },
+  },
+  {
     path: "subscription",
     loadChildren: () =>
       import("./pages/subscription/subscription.routes").then((m) => m.subscriptionRoutes),
+  },
+  {
+    path: "trips",
+    loadChildren: () => import("./pages/trips/trip.routes").then((m) => m.tripRoutes),
   },
   {
     path: "",

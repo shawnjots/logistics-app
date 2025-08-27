@@ -1,14 +1,15 @@
-import {AddressDto} from "../address.model";
-import {PaymentFor, PaymentMethodType, PaymentStatus} from "./enums";
+import {AddressDto} from "../address.dto";
+import {MoneyDto} from "../money.dto";
+import {PaymentStatus} from "./enums";
+
+//import {PaymentMethodDto} from "./payment-method.model";
 
 export interface PaymentDto {
   id: string;
-  createdDate: string;
-  paymentDate?: string;
-  method?: PaymentMethodType;
-  amount: number;
+  createdDate: Date;
+  methodId: string;
+  amount: MoneyDto;
   status: PaymentStatus;
-  paymentFor: PaymentFor;
-  billingAddress?: AddressDto;
-  notes?: string;
+  billingAddress: AddressDto;
+  description?: string;
 }

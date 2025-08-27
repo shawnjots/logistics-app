@@ -1,5 +1,8 @@
 using Logistics.DbMigrator.Data;
-using Logistics.Infrastructure.EF;
+using Logistics.DbMigrator.Services;
+using Logistics.DbMigrator.Workers;
+using Logistics.Infrastructure;
+
 using Serilog;
 
 Log.Logger = new LoggerConfiguration()
@@ -8,21 +11,22 @@ Log.Logger = new LoggerConfiguration()
 
 Log.Information("Starting up");
 
-var host = Host.CreateDefaultBuilder(args)
-    .ConfigureAppConfiguration(configuration =>
-    {
-        var testDataFile = Path.Combine(AppContext.BaseDirectory, "fake-dataset.json");
-        configuration.AddJsonFile(testDataFile, true);
-    })
-    .ConfigureServices((ctx, services) =>
-    {
-        services.AddInfrastructureLayer(ctx.Configuration)
-            .AddMasterDatabase()
-            .AddTenantDatabase()
-            .AddIdentity();
-        services.AddHostedService<SeedData>();
-    })
-    .UseSerilog()
-    .Build();
+var builder = Host.CreateApplicationBuilder(args);
 
-await host.RunAsync();
+builder.AddServiceDefaults();
+builder.Configuration.AddJsonFile(Path.Combine(AppContext.BaseDirectory, "fake-dataset.json"), optional: true);
+
+builder.Services.AddInfrastructureLayer(builder.Configuration)
+    .AddMasterDatabase()
+    .AddTenantDatabase()
+    .AddIdentity();
+
+builder.Services.AddScoped<PayrollService>();
+
+// These hosted services will run in the order they are registered
+builder.Services.AddHostedService<MigrateDatabaseWorker>();
+builder.Services.AddHostedService<SeedDatabaseWorker>();
+builder.Services.AddHostedService<FakeDataWorker>();
+builder.Services.AddHostedService<CreateSqlFunctionsWorker>();
+
+builder.Build().Run();

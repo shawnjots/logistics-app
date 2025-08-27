@@ -1,15 +1,18 @@
 #nullable enable
+using System.Text.RegularExpressions;
+
 using Duende.IdentityServer.Events;
 using Duende.IdentityServer.Models;
 using Duende.IdentityServer.Services;
 using Duende.IdentityServer.Stores;
+
+using Logistics.Domain.Entities;
+
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Text.RegularExpressions;
-using Logistics.Domain.Entities;
 
 namespace Logistics.IdentityServer.Pages.Account.Login;
 
@@ -102,7 +105,7 @@ public class Index : PageModel
             var result = await _signInManager.PasswordSignInAsync(user.UserName!, Input.Password, Input.RememberLogin, lockoutOnFailure: true);
             if (result.Succeeded)
             {
-                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id, user.UserName, clientId: context?.Client.ClientId));
+                await _events.RaiseAsync(new UserLoginSuccessEvent(user.UserName, user.Id.ToString(), user.UserName, clientId: context?.Client.ClientId));
 
                 if (context != null)
                 {

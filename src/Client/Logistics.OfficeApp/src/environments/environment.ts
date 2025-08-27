@@ -1,10 +1,9 @@
 export const environment = {
   production: false,
   mapboxToken:
-    "pk.eyJ1Ijoibnlhc2hhLXp3IiwiYSI6ImNtNnE2em56ODFiaGMybW83bzg4ZXlmaDcifQ.yEcN5LreFLmuFxhYMR6CnQ",
-  apiHost: "https://localhost:7000",
-  idHost: "https://localhost:7001",
-  // idHost: 'https://id.clensonic.org'
+    "pk.eyJ1Ijoic3V4cm9iZ20iLCJhIjoiY2w0dmsyMGd1MDEzZDNjcXcwZGRtY255MSJ9.XwGTNZx_httMhW0Fu34udQ",
+  apiBaseUrl: "https://localhost:7000",
+  idBaseUrl: "https://localhost:7001",
   stripePubKey:
     "pk_test_51QyIsE4Klqx5siJt8eAQrn9CxmrqRxgnvV2GfZIVmWClrofjDZYcFqcvPlYsxImxegjVxgPZciYc1bqs8veooAE2002gsEpsit",
 };

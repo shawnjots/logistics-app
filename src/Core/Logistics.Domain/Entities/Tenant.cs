@@ -1,20 +1,20 @@
-﻿using Logistics.Domain.Core;
-using Logistics.Domain.ValueObjects;
+using Logistics.Domain.Core;
+using Logistics.Domain.Primitives.ValueObjects;
 
 namespace Logistics.Domain.Entities;
 
-public class Tenant : Entity
+public class Tenant : Entity, IMasterEntity
 {
     public required string Name { get; set; }
     public string? CompanyName { get; set; }
-    public Address CompanyAddress { get; set; } = Address.NullAddress;
+    public required Address CompanyAddress { get; set; }
     public required string ConnectionString { get; set; }
     public required string BillingEmail { get; set; }
     public string? DotNumber { get; set; }
     public string? StripeCustomerId { get; set; }
-    
+
     public virtual Subscription? Subscription { get; set; }
-    
+
     /// <summary>
     /// Users that belong to this tenant
     /// </summary>

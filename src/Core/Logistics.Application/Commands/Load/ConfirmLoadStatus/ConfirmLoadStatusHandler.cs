@@ -1,27 +1,27 @@
-﻿using Logistics.Application.Services;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Services;
 using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Commands;
 
-internal sealed class ConfirmLoadStatusHandler : RequestHandler<ConfirmLoadStatusCommand, Result>
+internal sealed class ConfirmLoadStatusHandler : IAppRequestHandler<ConfirmLoadStatusCommand, Result>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
     private readonly INotificationService _notificationService;
+    private readonly ITenantUnitOfWork _tenantUow;
 
     public ConfirmLoadStatusHandler(
-        ITenantUnityOfWork tenantUow,
+        ITenantUnitOfWork tenantUow,
         INotificationService notificationService)
     {
         _tenantUow = tenantUow;
         _notificationService = notificationService;
     }
 
-    protected override async Task<Result> HandleValidated(
-        ConfirmLoadStatusCommand req, CancellationToken cancellationToken)
+    public async Task<Result> Handle(ConfirmLoadStatusCommand req, CancellationToken ct)
     {
-        var load = await _tenantUow.Repository<Load>().GetByIdAsync(req.LoadId);
+        var load = await _tenantUow.Repository<Load>().GetByIdAsync(req.LoadId, ct);
 
         if (load is null)
         {
@@ -29,24 +29,23 @@ internal sealed class ConfirmLoadStatusHandler : RequestHandler<ConfirmLoadStatu
         }
 
         var loadStatus = req.LoadStatus!.Value;
-        load.SetStatus(loadStatus);
-        
-        _tenantUow.Repository<Load>().Update(load);
-        var changes = await _tenantUow.SaveChangesAsync();
+        load.UpdateStatus(loadStatus, true);
+
+        var changes = await _tenantUow.SaveChangesAsync(ct);
 
         if (changes > 0)
         {
-            await SendNotificationAsync(load, req.DriverId!);
+            await SendNotificationAsync(load);
         }
-        
-        return Result.Succeed();
+
+        return Result.Ok();
     }
 
-    private async Task SendNotificationAsync(Load load, string driverId)
+    private async Task SendNotificationAsync(Load load)
     {
         const string title = "Load updates";
-        var driverName = load.AssignedTruck?.Drivers.FirstOrDefault(i => i.Id == driverId)?.GetFullName();
-        var message = $"Driver {driverName} confirmed the load #{load.RefId} status to '{load.GetStatus()}'";
+        var driverName = load.AssignedTruck?.MainDriver?.GetFullName();
+        var message = $"Driver {driverName} confirmed the load #{load.Number} status to '{load.Status}'";
         await _notificationService.SendNotificationAsync(title, message);
     }
 }

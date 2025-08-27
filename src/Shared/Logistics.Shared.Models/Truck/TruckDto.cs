@@ -1,12 +1,17 @@
-﻿namespace Logistics.Shared.Models;
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
+
+namespace Logistics.Shared.Models;
 
 public class TruckDto
 {
-    public string? Id { get; set; }
-    public string? TruckNumber { get; set; }
-    public AddressDto? CurrentLocation { get; set; }
-    public double? CurrentLocationLat { get; set; }
-    public double? CurrentLocationLong { get; set; }
-    public IEnumerable<EmployeeDto> Drivers { get; set; } = new List<EmployeeDto>();
-    public IEnumerable<LoadDto> Loads { get; set; } = new List<LoadDto>();
+    public Guid? Id { get; set; }
+    public string? Number { get; set; }
+    public TruckType Type { get; set; }
+    public TruckStatus Status { get; set; }
+    public Address? CurrentAddress { get; set; }
+    public GeoPoint? CurrentLocation { get; set; }
+    public EmployeeDto? MainDriver { get; set; }
+    public EmployeeDto? SecondaryDriver { get; set; }
+    public IEnumerable<LoadDto> Loads { get; set; } = [];
 }

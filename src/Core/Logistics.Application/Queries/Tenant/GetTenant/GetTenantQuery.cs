@@ -1,11 +1,11 @@
-﻿using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Shared.Models;
 
 namespace Logistics.Application.Queries;
 
-public sealed class GetTenantQuery : IRequest<Result<TenantDto>>
+public sealed class GetTenantQuery : IAppRequest<Result<TenantDto>>
 {
-    public string? Id { get; set; }
+    public Guid? Id { get; set; }
     public string? Name { get; set; }
     public bool IncludeConnectionString { get; set; }
 }

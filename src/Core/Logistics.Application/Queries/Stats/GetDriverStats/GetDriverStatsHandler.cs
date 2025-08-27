@@ -1,32 +1,36 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Specifications;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Domain.Specifications;
+using Logistics.Domain.Primitives.Enums;
 using Logistics.Shared.Models;
-using Logistics.Shared.Consts;
 
 namespace Logistics.Application.Queries;
 
-internal sealed class GetDriverStatsHandler : RequestHandler<GetDriverStatsQuery, Result<DriverStatsDto>>
+internal sealed class GetDriverStatsHandler : IAppRequestHandler<GetDriverStatsQuery, Result<DriverStatsDto>>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public GetDriverStatsHandler(ITenantUnityOfWork tenantUow)
+    public GetDriverStatsHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result<DriverStatsDto>> HandleValidated(
-        GetDriverStatsQuery req, CancellationToken cancellationToken)
+    public async Task<Result<DriverStatsDto>> Handle(
+        GetDriverStatsQuery req, CancellationToken ct)
     {
         var driverStats = new DriverStatsDto();
-        var driver = await _tenantUow.Repository<Employee>().GetByIdAsync(req.UserId!);
+        var driver = await _tenantUow.Repository<Employee>().GetByIdAsync(req.UserId);
 
         if (driver is null)
         {
             return Result<DriverStatsDto>.Fail($"Could not find driver with the user ID '{req.UserId}'");
         }
 
-        if (string.IsNullOrEmpty(driver.TruckId))
+        var assignedTruck = await _tenantUow.Repository<Truck>().GetAsync(i => i.MainDriverId == driver.Id
+                                                                               || i.SecondaryDriverId == driver.Id);
+
+        if (assignedTruck is null)
         {
             return Result<DriverStatsDto>.Fail("Driver does not have an assigned truck");
         }
@@ -37,12 +41,18 @@ internal sealed class GetDriverStatsHandler : RequestHandler<GetDriverStatsQuery
         var lastWeekStart = startOfWeek.AddDays(-7);
         var startOfMonth = new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc);
         var lastMonthStart = startOfMonth.AddMonths(-1);
-        
+
         var loadsRepository = _tenantUow.Repository<Load>();
-        var thisWeekLoads = loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(driver.TruckId, startOfWeek, now));
-        var lastWeekLoads = loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(driver.TruckId, lastWeekStart, startOfWeek));
-        var thisMonthLoads = loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(driver.TruckId, startOfMonth, now));
-        var lastMonthLoads = loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(driver.TruckId, lastMonthStart, startOfMonth));
+        var thisWeekLoads =
+            loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(assignedTruck.Id, startOfWeek, now));
+        var lastWeekLoads =
+            loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(assignedTruck.Id, lastWeekStart,
+                startOfWeek));
+        var thisMonthLoads =
+            loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(assignedTruck.Id, startOfMonth, now));
+        var lastMonthLoads =
+            loadsRepository.ApplySpecification(new FilterLoadsByDeliveryDate(assignedTruck.Id, lastMonthStart,
+                startOfMonth));
 
         driverStats.ThisWeekGross = thisWeekLoads.Sum(l => l.DeliveryCost);
         driverStats.ThisWeekShare = driverStats.ThisWeekGross * driverIncomePercentage;
@@ -56,6 +66,6 @@ internal sealed class GetDriverStatsHandler : RequestHandler<GetDriverStatsQuery
         driverStats.LastMonthGross = lastMonthLoads.Sum(l => l.DeliveryCost);
         driverStats.LastMonthShare = driverStats.LastMonthGross * driverIncomePercentage;
         driverStats.LastMonthDistance = lastMonthLoads.Sum(l => l.Distance);
-        return Result<DriverStatsDto>.Succeed(driverStats);
+        return Result<DriverStatsDto>.Ok(driverStats);
     }
 }

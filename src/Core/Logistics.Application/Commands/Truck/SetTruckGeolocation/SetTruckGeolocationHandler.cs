@@ -1,42 +1,40 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Domain.ValueObjects;
-using Logistics.Mappings;
 using Logistics.Shared.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Logistics.Application.Commands;
 
-internal sealed class SetTruckGeolocationHandler : RequestHandler<SetTruckGeolocationCommand, Result>
+internal sealed class SetTruckGeolocationHandler : IAppRequestHandler<SetTruckGeolocationCommand, Result>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
     private readonly ILogger<SetTruckGeolocationHandler> _logger;
+    private readonly ITenantUnitOfWork _tenantUow;
 
     public SetTruckGeolocationHandler(
-        ITenantUnityOfWork tenantUow,
+        ITenantUnitOfWork tenantUow,
         ILogger<SetTruckGeolocationHandler> logger)
     {
         _logger = logger;
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result> HandleValidated(
-        SetTruckGeolocationCommand req, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        SetTruckGeolocationCommand req, CancellationToken ct)
     {
-        _tenantUow.SetCurrentTenantById(req.GeolocationData.TenantId);
-        var truck = await _tenantUow.Repository<Truck>().GetByIdAsync(req.GeolocationData.TruckId);
+        await _tenantUow.SetCurrentTenantByIdAsync(req.GeolocationData.TenantId);
+        var truck = await _tenantUow.Repository<Truck>().GetByIdAsync(req.GeolocationData.TruckId, ct);
 
         if (truck is null)
         {
-            _logger.LogWarning("Could not find a truck with ID {TruckId}, skipped saving geolocation data", req.GeolocationData.TruckId);
-            return Result.Succeed();
+            _logger.LogWarning("Could not find a truck with ID {TruckId}, skipped saving geolocation data",
+                req.GeolocationData.TruckId);
+            return Result.Ok();
         }
 
-        truck.CurrentLocation = req.GeolocationData.CurrentAddress?.ToEntity() ?? Address.NullAddress;
-        truck.CurrentLocationLat = req.GeolocationData.Latitude;
-        truck.CurrentLocationLong = req.GeolocationData.Longitude;
-        _tenantUow.Repository<Truck>().Update(truck);
-        await _tenantUow.SaveChangesAsync();
-        return Result.Succeed();
+        truck.CurrentAddress = req.GeolocationData.CurrentAddress;
+        truck.CurrentLocation = req.GeolocationData.CurrentLocation;
+        await _tenantUow.SaveChangesAsync(ct);
+        return Result.Ok();
     }
 }

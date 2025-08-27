@@ -1,11 +1,13 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Logistics.Domain.Core;
 
-public abstract class Entity : IEntity<string>
+/// <summary>
+///     Base entity contains the ID and a list of domain events.
+/// </summary>
+public abstract class Entity : IEntity<Guid>
 {
-    public string Id { get; set; } = Guid.NewGuid().ToString();
+    [NotMapped] public List<IDomainEvent> DomainEvents { get; } = [];
 
-    [NotMapped] 
-    public List<IDomainEvent> DomainEvents { get; } = [];
+    public Guid Id { get; set; } = Guid.NewGuid();
 }

@@ -1,5 +1,6 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
-using Logistics.Shared.Consts;
+using CommunityToolkit.Mvvm.Messaging;
+
+using Logistics.Domain.Primitives.Enums;
 using Logistics.DriverApp.Messages;
 using Logistics.DriverApp.Models;
 
@@ -18,7 +19,7 @@ public class LoadProximityUpdater : ILoadProximityUpdater
     public async Task UpdateLoadProximitiesAsync(Location currentLocation)
     {
         var activeLoadsMessage = WeakReferenceMessenger.Default.Send<ActiveLoadsRequestMessage>();
-        
+
         foreach (var load in activeLoadsMessage.Response)
         {
             await UpdateLoadProximityAsync(load, currentLocation);
@@ -43,7 +44,7 @@ public class LoadProximityUpdater : ILoadProximityUpdater
             if (originDistance < 0.5 && !load.CanConfirmPickUp && load.Status != LoadStatus.PickedUp)
             {
                 load.CanConfirmPickUp = true;
-                await _apiClient.UpdateLoadProximity(new UpdateLoadProximity
+                await _apiClient.UpdateLoadProximity(new UpdateLoadProximityCommand
                 {
                     LoadId = load.Id,
                     CanConfirmPickUp = true
@@ -53,7 +54,7 @@ public class LoadProximityUpdater : ILoadProximityUpdater
             if (destDistance < 0.5 && !load.CanConfirmDelivery && load.Status != LoadStatus.Delivered)
             {
                 load.CanConfirmDelivery = true;
-                await _apiClient.UpdateLoadProximity(new UpdateLoadProximity
+                await _apiClient.UpdateLoadProximity(new UpdateLoadProximityCommand
                 {
                     LoadId = load.Id,
                     CanConfirmDelivery = true

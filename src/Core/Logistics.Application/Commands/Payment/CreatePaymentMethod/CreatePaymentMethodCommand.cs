@@ -1,11 +1,10 @@
-﻿using Logistics.Domain.ValueObjects;
-using Logistics.Shared.Models;
-using Logistics.Shared.Consts;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
 
 namespace Logistics.Application.Commands;
 
-public class CreatePaymentMethodCommand : IRequest<Result>
+public class CreatePaymentMethodCommand : IAppRequest
 {
     public PaymentMethodType Type { get; set; }
     public PaymentMethodVerificationStatus? VerificationStatus { get; set; }

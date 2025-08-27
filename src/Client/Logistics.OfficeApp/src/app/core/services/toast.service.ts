@@ -1,12 +1,14 @@
-import {Injectable} from "@angular/core";
-import {ConfirmationService, MessageService} from "primeng/api";
+import {Injectable, inject} from "@angular/core";
+import {Confirmation, ConfirmationService, MessageService} from "primeng/api";
 
+/**
+ * ToastService is a service for displaying toast notifications and confirmation dialogs.
+ * It uses PrimeNG's MessageService and ConfirmationService to show messages and confirmations.
+ */
 @Injectable({providedIn: "root"})
 export class ToastService {
-  constructor(
-    private readonly messageService: MessageService,
-    private readonly confirmService: ConfirmationService
-  ) {}
+  private readonly messageService = inject(MessageService);
+  private readonly confirmService = inject(ConfirmationService);
 
   /**
    * Displays a success message toast notification with the given message and title.
@@ -41,12 +43,10 @@ export class ToastService {
    * @param onAccept The callback function to be executed when the accept button is clicked.
    * @param onReject The callback function to be executed when the reject button is clicked.
    */
-  confrimAction(message: string, onAccept: () => void, onReject?: () => void) {
+  confirm(options: Confirmation) {
     this.confirmService.confirm({
       key: "confirmDialog",
-      message,
-      accept: onAccept,
-      reject: onReject,
+      ...options,
     });
   }
 }

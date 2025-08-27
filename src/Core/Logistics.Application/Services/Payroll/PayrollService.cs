@@ -1,19 +1,19 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Shared.Consts;
+using Logistics.Domain.Primitives.Enums;
 using Microsoft.Extensions.Logging;
 
 namespace Logistics.Application.Services;
 
 internal class PayrollService : IPayrollService
 {
-    private readonly IMasterUnityOfWork _masterUow;
-    private readonly ITenantUnityOfWork _tenantUow;
     private readonly ILogger<PayrollService> _logger;
+    private readonly IMasterUnitOfWork _masterUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
     public PayrollService(
-        IMasterUnityOfWork masterUow,
-        ITenantUnityOfWork tenantUow,
+        IMasterUnitOfWork masterUow,
+        ITenantUnitOfWork tenantUow,
         ILogger<PayrollService> logger)
     {
         _masterUow = masterUow;
@@ -23,28 +23,30 @@ internal class PayrollService : IPayrollService
 
     public async Task GenerateMonthlyPayrollsAsync()
     {
-        var tenants = await _masterUow.Repository<Domain.Entities.Tenant>().GetListAsync();
+        var tenants = await _masterUow.Repository<Tenant>().GetListAsync();
 
         foreach (var tenant in tenants)
         {
             _tenantUow.SetCurrentTenant(tenant);
-            
-            var previousMonthStart = new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+
+            var previousMonthStart =
+                new DateTime(DateTime.UtcNow.Year, DateTime.UtcNow.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
             var previousMonthEnd = previousMonthStart.AddMonths(1).AddDays(-1);
-            var employees = await _tenantUow.Repository<Employee>().GetListAsync(e => 
-                e.SalaryType == SalaryType.Monthly || 
+            var employees = await _tenantUow.Repository<Employee>().GetListAsync(e =>
+                e.SalaryType == SalaryType.Monthly ||
                 e.SalaryType == SalaryType.ShareOfGross);
 
             foreach (var employee in employees)
             {
-                var isPayrollExisting = await IsPayrollExisting(employee.Id, previousMonthStart, previousMonthEnd);
+                var isPayrollExisting =
+                    await IsPayrollInvoiceExisting(employee.Id, previousMonthStart, previousMonthEnd);
                 if (isPayrollExisting)
                 {
                     continue;
                 }
 
-                var payroll = CreatePayroll(employee, previousMonthStart, previousMonthEnd);
-                await _tenantUow.Repository<Payroll>().AddAsync(payroll);
+                var payroll = CreatePayrollInvoice(employee, previousMonthStart, previousMonthEnd);
+                await _tenantUow.Repository<PayrollInvoice>().AddAsync(payroll);
             }
 
             _logger.LogInformation(
@@ -56,25 +58,26 @@ internal class PayrollService : IPayrollService
 
     public async Task GenerateWeeklyPayrollsAsync()
     {
-        var tenants = await _masterUow.Repository<Domain.Entities.Tenant>().GetListAsync();
+        var tenants = await _masterUow.Repository<Tenant>().GetListAsync();
 
         foreach (var tenant in tenants)
         {
             _tenantUow.SetCurrentTenant(tenant);
             var previousWeekStart = StartOfPreviousWeek(DateTime.UtcNow);
             var previousWeekEnd = previousWeekStart.AddDays(6);
-            var employees = await _tenantUow.Repository<Employee>().GetListAsync(e => e.SalaryType == SalaryType.Weekly);
+            var employees =
+                await _tenantUow.Repository<Employee>().GetListAsync(e => e.SalaryType == SalaryType.Weekly);
 
             foreach (var employee in employees)
             {
-                var isPayrollExisting = await IsPayrollExisting(employee.Id, previousWeekStart, previousWeekEnd);
+                var isPayrollExisting = await IsPayrollInvoiceExisting(employee.Id, previousWeekStart, previousWeekEnd);
                 if (isPayrollExisting)
                 {
                     continue;
                 }
 
-                var payroll = CreatePayroll(employee, previousWeekStart, previousWeekEnd);
-                await _tenantUow.Repository<Payroll>().AddAsync(payroll);
+                var payroll = CreatePayrollInvoice(employee, previousWeekStart, previousWeekEnd);
+                await _tenantUow.Repository<PayrollInvoice>().AddAsync(payroll);
             }
 
             _logger.LogInformation(
@@ -84,73 +87,76 @@ internal class PayrollService : IPayrollService
         }
     }
 
-    public Payroll CreatePayroll(Employee employee, DateTime startDate, DateTime endDate)
+    public PayrollInvoice CreatePayrollInvoice(Employee employee, DateTime startDate, DateTime endDate)
     {
-        var payment = new Payment
+        var invoiceAmount = CalculateSalary(employee, startDate, endDate);
+
+        var payrollInvoice = new PayrollInvoice
         {
-            Amount = CalculateSalary(employee, startDate, endDate),
-            PaymentFor = PaymentFor.Payroll,
-        };
-        
-        var payroll = new Payroll
-        {
-            StartDate = startDate,
-            EndDate = endDate,
-            Employee = employee,
-            Payment = payment
+            Total = invoiceAmount,
+            Status = InvoiceStatus.Issued,
+            PeriodStart = startDate,
+            PeriodEnd = endDate,
+            EmployeeId = employee.Id,
+            Employee = employee
         };
 
-        return payroll;
+
+        return payrollInvoice;
     }
-    
-    private async Task<bool> IsPayrollExisting(string employeeId, DateTime startDate, DateTime endDate)
+
+    private async Task<bool> IsPayrollInvoiceExisting(Guid employeeId, DateTime startDate, DateTime endDate)
     {
-        var payroll = await _tenantUow.Repository<Payroll>().GetAsync(p =>
+        var payroll = await _tenantUow.Repository<PayrollInvoice>().GetAsync(p =>
             p.EmployeeId == employeeId &&
-            p.StartDate >= startDate &&
-            p.EndDate <= endDate);
+            p.PeriodStart >= startDate &&
+            p.PeriodEnd <= endDate);
 
         return payroll != null;
     }
 
-    private static decimal CalculateSalary(Employee employee, DateTime startDate, DateTime endDate)
+    private decimal CalculateSalary(Employee employee, DateTime startDate, DateTime endDate)
     {
-        if (employee is { SalaryType: SalaryType.ShareOfGross, Truck: not null })
+        // Share-of-gross: sum every load that was delivered in the period
+        // by ANY truck where this employee was the main OR secondary driver.
+        if (employee.SalaryType == SalaryType.ShareOfGross)
         {
-            var totalDeliveredLoadsGross = employee.Truck.Loads
-                .Where(i => i.DeliveryDate.HasValue && 
-                            i.DeliveryDate.Value >= startDate && 
-                            i.DeliveryDate.Value <= endDate)
-                .Sum(i => i.DeliveryCost);
+            var totalGross = _tenantUow.Repository<Truck>()
+                .Query()
+                .Where(t => t.MainDriverId == employee.Id ||
+                            t.SecondaryDriverId == employee.Id)
+                .SelectMany(t => t.Loads.Where(l =>
+                    l.DeliveredAt.HasValue &&
+                    l.DeliveredAt.Value >= startDate &&
+                    l.DeliveredAt.Value <= endDate))
+                .Sum(l => l.DeliveryCost.Amount);
 
-            return totalDeliveredLoadsGross * employee.Salary;
-        }
-        
-        // Calculate salary for employees paid weekly.
-        if (employee.SalaryType is SalaryType.Weekly)
-        {
-            var numberOfWeeks = CountWeeks(startDate, endDate);
-            return numberOfWeeks * employee.Salary;
-        }
-
-        // Calculate salary for employees paid monthly.
-        if (employee.SalaryType is SalaryType.Monthly)
-        {
-            var numberOfMonths = CountMonths(startDate, endDate);
-            return numberOfMonths * employee.Salary;
+            return totalGross * employee.Salary; // Salary holds the share ratio (0-1)
         }
 
-        // Default return for other salary types (e.g., a fixed salary not dependent on date range).
+        // Weekly
+        if (employee.SalaryType == SalaryType.Weekly)
+        {
+            return CountWeeks(startDate, endDate) * employee.Salary;
+        }
+
+        // Monthly
+        if (employee.SalaryType == SalaryType.Monthly)
+        {
+            return CountMonths(startDate, endDate) * employee.Salary;
+        }
+
+        // Fallback – fixed amount
         return employee.Salary;
     }
-    
+
     private static int CountWeeks(DateTime startDate, DateTime endDate)
     {
         // Assuming a week starts on Sunday and ends on Saturday.
         var days = (endDate - startDate).Days + 1; // +1 to include the start day in the count
         var fullWeeks = days / 7;
         var remainingDays = days % 7;
-    
+
         // Check if the remaining days form a week when combined with the start and end dates.
         if (remainingDays > 0)
         {
@@ -162,23 +168,23 @@ internal class PayrollService : IPayrollService
                 fullWeeks++;
             }
         }
-    
+
         return fullWeeks;
     }
 
     private static int CountMonths(DateTime startDate, DateTime endDate)
     {
         var months = (endDate.Year - startDate.Year) * 12 + endDate.Month - startDate.Month;
-    
+
         // If endDate is in a month but before the start date day, then reduce a month.
         if (endDate.Day < startDate.Day)
         {
             months--;
         }
-    
+
         return months + 1; // +1 to include the starting month
     }
-    
+
     private static DateTime StartOfPreviousWeek(DateTime date)
     {
         var daysToSubtract = (int)date.DayOfWeek + 7;

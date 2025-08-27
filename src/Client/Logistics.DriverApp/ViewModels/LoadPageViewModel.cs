@@ -1,8 +1,7 @@
-﻿using Logistics.Shared.Consts;
+using Logistics.Domain.Primitives.Enums;
 using Logistics.DriverApp.Models;
 using Logistics.DriverApp.Services;
 using Logistics.DriverApp.Services.Authentication;
-using Logistics.Shared.Models;
 
 namespace Logistics.DriverApp.ViewModels;
 
@@ -11,7 +10,7 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
     private readonly IApiClient _apiClient;
     private readonly IAuthService _authService;
     private readonly IMapsService _mapsService;
-    private string? _lastLoadId;
+    private Guid? _lastLoadId;
 
     public LoadPageViewModel(
         IApiClient apiClient,
@@ -25,7 +24,7 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
         ConfirmDeliveryCommand = new AsyncRelayCommand(() => ConfirmLoadStatusAsync(LoadStatus.Delivered));
     }
 
-    
+
     #region Commands
 
     public IAsyncRelayCommand ConfirmPickUpCommand { get; }
@@ -33,7 +32,7 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
 
     #endregion
 
-    
+
     #region Bindable properties
 
     private ActiveLoad? _load;
@@ -52,7 +51,7 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
 
     #endregion
 
-    
+
     protected override async Task OnAppearingAsync()
     {
         await FetchLoadAsync();
@@ -78,14 +77,14 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
 
     private async Task FetchLoadAsync()
     {
-        if (string.IsNullOrEmpty(_lastLoadId) || _lastLoadId == Load?.Id)
+        if (!_lastLoadId.HasValue || _lastLoadId == Load?.Id)
         {
             return;
         }
-        
+
         IsLoading = true;
-        var result = await _apiClient.GetLoadAsync(_lastLoadId);
-        
+        var result = await _apiClient.GetLoadAsync(_lastLoadId.Value);
+
         if (!result.Success)
         {
             await PopupHelpers.ShowErrorAsync("Failed to fetch the load data, try later");
@@ -102,9 +101,9 @@ public class LoadPageViewModel : BaseViewModel, IQueryAttributable
     {
         if (Load is null)
             return;
-        
+
         IsLoading = true;
-        Result? result = default;
+        Result? result = null;
 
         switch (status)
         {

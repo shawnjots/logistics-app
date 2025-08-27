@@ -1,5 +1,6 @@
-﻿using FluentValidation;
-using Logistics.Shared.Consts;
+using FluentValidation;
+
+using Logistics.Application.Constants;
 
 namespace Logistics.Application.Commands;
 
@@ -10,19 +11,7 @@ internal sealed class UpdateLoadValidator : AbstractValidator<UpdateLoadCommand>
         RuleFor(i => i.Id).NotEmpty();
         RuleFor(i => i.Distance).GreaterThan(0);
         RuleFor(i => i.DeliveryCost)
-            .GreaterThan(LoadConsts.MinDeliveryCost)
-            .LessThan(LoadConsts.MaxDeliveryCost);
-        
-        When(i => i.OriginAddress != null, () =>
-        {
-            RuleFor(i => i.OriginAddressLat).NotEmpty().InclusiveBetween(-90, 90);
-            RuleFor(i => i.OriginAddressLong).NotEmpty().InclusiveBetween(-180, 180);
-        });
-        
-        When(i => i.DestinationAddress != null, () =>
-        {
-            RuleFor(i => i.DestinationAddressLat).NotEmpty().InclusiveBetween(-90, 90);
-            RuleFor(i => i.DestinationAddressLong).NotEmpty().InclusiveBetween(-180, 180);
-        });
+            .GreaterThan(LoadConstants.MinDeliveryCost)
+            .LessThan(LoadConstants.MaxDeliveryCost);
     }
 }

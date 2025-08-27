@@ -1,12 +1,12 @@
-﻿using Logistics.Shared.Models;
+using Logistics.Shared.Models;
 
 namespace Logistics.HttpClient.Abstractions;
 
 public interface IEmployeeApi
 {
-    Task<Result<EmployeeDto>> GetEmployeeAsync(string userId);
+    Task<Result<EmployeeDto>> GetEmployeeAsync(Guid userId);
     Task<PagedResult<EmployeeDto>> GetEmployeesAsync(SearchableQuery query);
-    Task<Result> CreateEmployeeAsync(CreateEmployee command);
-    Task<Result> UpdateEmployeeAsync(UpdateEmployee command);
-    Task<Result> DeleteEmployeeAsync(string userId);
+    Task<Result> CreateEmployeeAsync(CreateEmployeeCommand command);
+    Task<Result> UpdateEmployeeAsync(UpdateEmployeeCommand command);
+    Task<Result> DeleteEmployeeAsync(Guid userId);
 }

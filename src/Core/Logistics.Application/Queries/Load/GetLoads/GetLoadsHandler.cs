@@ -1,23 +1,24 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Specifications;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Domain.Specifications;
 using Logistics.Mappings;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Queries;
 
-internal sealed class GetLoadsHandler : RequestHandler<GetLoadsQuery, PagedResult<LoadDto>>
+internal sealed class GetLoadsHandler : IAppRequestHandler<GetLoadsQuery, PagedResult<LoadDto>>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public GetLoadsHandler(ITenantUnityOfWork tenantUow)
+    public GetLoadsHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<PagedResult<LoadDto>> HandleValidated(
-        GetLoadsQuery req, 
-        CancellationToken cancellationToken)
+    public async Task<PagedResult<LoadDto>> Handle(
+        GetLoadsQuery req,
+        CancellationToken ct)
     {
         var totalItems = await _tenantUow.Repository<Load>().CountAsync();
         var spec = new SearchLoads(req.Search, req.OrderBy);
@@ -26,27 +27,32 @@ internal sealed class GetLoadsHandler : RequestHandler<GetLoadsQuery, PagedResul
 
         if (req.OnlyActiveLoads)
         {
-            baseQuery = baseQuery.Where(i => i.DeliveryDate == null);
+            baseQuery = baseQuery.Where(i => i.DeliveredAt == null);
         }
-        if (!string.IsNullOrEmpty(req.UserId))
+
+        if (req.UserId.HasValue)
         {
             baseQuery = baseQuery.Where(i => i.AssignedTruck != null &&
-                                             i.AssignedTruck.Drivers.Select(emp => emp.Id).Contains(req.UserId));
+                                             (i.AssignedTruck.MainDriverId == req.UserId ||
+                                              i.AssignedTruck.SecondaryDriverId == req.UserId));
         }
-        if (!string.IsNullOrEmpty(req.TruckId))
+
+        if (req.TruckId.HasValue)
         {
             baseQuery = baseQuery.Where(i => i.AssignedTruckId == req.TruckId);
         }
+
         if (req is { StartDate: not null, EndDate: not null })
         {
-            baseQuery = baseQuery.Where(i => i.DispatchedDate >= req.StartDate && 
-                                             i.DispatchedDate <= req.EndDate);
+            baseQuery = baseQuery.Where(i => i.DispatchedAt >= req.StartDate &&
+                                             i.DispatchedAt <= req.EndDate);
         }
+
         if (!req.LoadAllPages)
         {
             baseQuery = baseQuery.ApplyPaging(req.Page, req.PageSize);
         }
-        
+
         var loads = baseQuery.Select(i => i.ToDto()).ToArray();
         return PagedResult<LoadDto>.Succeed(loads, totalItems, req.PageSize);
     }

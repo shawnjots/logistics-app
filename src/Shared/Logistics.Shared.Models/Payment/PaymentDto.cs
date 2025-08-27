@@ -1,17 +1,18 @@
-﻿using Logistics.Shared.Consts;
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
 
 namespace Logistics.Shared.Models;
 
-public class PaymentDto
+public record PaymentDto
 {
-    public string Id { get; set; } = default!;
+    public Guid Id { get; set; }
     public DateTime CreatedDate { get; set; }
-    public DateTime? PaymentDate { get; set; }
-    public PaymentMethodType? Method { get; set; }
-    public decimal Amount { get; set; }
+
+    public Money Amount { get; set; } = null!;
+    //public PaymentMethodDto? Method { get; set; }
+    public Guid MethodId { get; set; }
+    public Guid TenantId { get; set; }
     public PaymentStatus Status { get; set; }
-    public PaymentFor PaymentFor { get; set; }
-    public AddressDto? BillingAddress { get; set; }
-    public string? Notes { get; set; }
-    public string? SubscriptionId { get; set; }
+    public Address? BillingAddress { get; set; }
+    public string? Description { get; set; }
 }

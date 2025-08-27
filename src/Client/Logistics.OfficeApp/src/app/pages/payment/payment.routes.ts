@@ -1,22 +1,16 @@
 import {Routes} from "@angular/router";
 import {authGuard} from "@/core/auth";
-import {ProcessPaymentComponent} from "./process-payment/process-payment.component";
+import {Permissions} from "@/shared/models";
+import {ListPaymentsComponent} from "./list-payments/list-payments";
 
 export const paymentRoutes: Routes = [
   {
-    path: "invoice/:invoiceId",
-    component: ProcessPaymentComponent,
+    path: "",
+    component: ListPaymentsComponent,
     canActivate: [authGuard],
     data: {
-      breadcrumb: "Invoice Payment",
-    },
-  },
-  {
-    path: "payroll/:payrollId",
-    component: ProcessPaymentComponent,
-    canActivate: [authGuard],
-    data: {
-      breadcrumb: "Payroll Payment",
+      breadcrumb: "Payments",
+      permission: Permissions.Payments.View,
     },
   },
 ];

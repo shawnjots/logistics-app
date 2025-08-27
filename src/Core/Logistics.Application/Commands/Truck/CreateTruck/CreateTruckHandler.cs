@@ -1,48 +1,47 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
-using Logistics.Domain.Specifications;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Commands;
 
-internal sealed class CreateTruckHandler : RequestHandler<CreateTruckCommand, Result>
+internal sealed class CreateTruckHandler : IAppRequestHandler<CreateTruckCommand, Result>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public CreateTruckHandler(ITenantUnityOfWork tenantUow)
+    public CreateTruckHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result> HandleValidated(
-        CreateTruckCommand req, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        CreateTruckCommand req, CancellationToken ct)
     {
-        var truckWithThisNumber = await _tenantUow.Repository<Truck>().GetAsync(i => i.TruckNumber == req.TruckNumber);
+        var truckWithThisNumber = await _tenantUow.Repository<Truck>().GetAsync(i => i.Number == req.TruckNumber);
 
         if (truckWithThisNumber is not null)
         {
             return Result.Fail($"Already exists truck with number {req.TruckNumber}");
         }
-        
-        var drivers = _tenantUow.Repository<Employee>()
-            .ApplySpecification(new GetEmployeesById(req.DriversIds!))
-            .ToList();
 
-        if (drivers.Count == 0)
+        var driver = await _tenantUow.Repository<Employee>().GetByIdAsync(req.MainDriverId);
+
+        if (driver is null)
         {
-            return Result.Fail("Could not find any drivers with specified IDs");
+            return Result.Fail($"Could not find driver with ID {req.MainDriverId}");
         }
 
-        var alreadyAssociatedDriver = drivers.FirstOrDefault(i => i.Truck != null && i.Truck.TruckNumber == req.TruckNumber);
+        var alreadyAssociatedTruck = await _tenantUow.Repository<Truck>().GetAsync(i => i.MainDriverId == driver.Id);
 
-        if (alreadyAssociatedDriver is not null)
+        if (alreadyAssociatedTruck is not null)
         {
-            return Result.Fail($"Driver '{alreadyAssociatedDriver.GetFullName()}' is already associated with the truck number '{req.TruckNumber}'");
+            return Result.Fail(
+                $"Driver '{driver.GetFullName()}' is already associated with the truck number '{req.TruckNumber}'");
         }
-        
-        var truckEntity = Truck.Create(req.TruckNumber!, drivers);
+
+        var truckEntity = Truck.Create(req.TruckNumber, req.TruckType, driver);
         await _tenantUow.Repository<Truck>().AddAsync(truckEntity);
         await _tenantUow.SaveChangesAsync();
-        return Result.Succeed();
+        return Result.Ok();
     }
 }

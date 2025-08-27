@@ -1,4 +1,4 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Domain.Entities;
 using Logistics.Shared.Models;
 
 namespace Logistics.Mappings;
@@ -11,19 +11,18 @@ public static class PaymentMapper
         {
             Id = entity.Id,
             Amount = entity.Amount,
-            CreatedDate = entity.CreatedDate,
-            Notes = entity.Notes,
-            Method = entity.Method,
-            PaymentDate = entity.PaymentDate,
-            PaymentFor = entity.PaymentFor,
+            CreatedDate = entity.CreatedAt,
+            MethodId = entity.MethodId,
+            TenantId = entity.TenantId,
             Status = entity.Status,
-            SubscriptionId = entity.SubscriptionId,
+            Description = entity.Description
         };
-        
+
         if (entity.BillingAddress.IsNotNull())
         {
-            dto.BillingAddress = entity.BillingAddress.ToDto();
+            dto.BillingAddress = entity.BillingAddress;
         }
+
         return dto;
     }
 }

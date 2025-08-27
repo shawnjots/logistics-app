@@ -1,0 +1,128 @@
+<div class="flex items-center">
+  <h1>Employee Payroll Invoices</h1>
+  <p-button
+    styleClass="text-black ms-2"
+    icon="pi pi-plus-circle"
+    size="large"
+    [rounded]="true"
+    [text]="true"
+    pTooltip="Add a new payroll invoice"
+    [routerLink]="['/invoices/payroll/add']"
+  />
+</div>
+<hr class="w-full" />
+
+@if (isLoadingEmployee() || !employee()) {
+  <div class="flex items-center">
+    <p-progress-spinner />
+    <div class="ms-2">Loading employee data</div>
+  </div>
+} @else {
+  <p-card styleClass="mb-3">
+    <ng-template #header>
+      <h4 class="py-2 ps-3">Payroll details</h4>
+      <hr class="m-0 w-full" />
+    </ng-template>
+
+    <div class="col-md-5 col-12">
+      <div class="row mb-3">
+        <div class="col-4">
+          <h6>Employee:</h6>
+        </div>
+        <div class="col-8">
+          {{ employee()!.fullName }}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-4">
+          <h6>Position:</h6>
+        </div>
+        <div class="col-8">
+          {{ employee()!.roles[0].displayName }}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-4">
+          <h6>Salary type:</h6>
+        </div>
+        <div class="col-8">
+          {{ getSalaryTypeDesc(employee()!.salaryType) }}
+        </div>
+      </div>
+      <div class="row mb-3">
+        <div class="col-4">
+          <h6>Salary:</h6>
+        </div>
+        <div class="col-8">
+          @if (employee()!.salaryType === "share_of_gross") {
+            {{ employee()!.salary | percent }}
+          } @else {
+            {{ employee()!.salary | currency }}
+          }
+        </div>
+      </div>
+    </div>
+  </p-card>
+}
+
+<p-card>
+  <p-table
+    [value]="invoices()"
+    responsiveLayout="scroll"
+    [lazy]="true"
+    [paginator]="true"
+    [showCurrentPageReport]="true"
+    (onLazyLoad)="load($event)"
+    [rows]="10"
+    [(first)]="first"
+    [totalRecords]="totalRecords()"
+    [loading]="isLoadingPayrolls()"
+    [rowsPerPageOptions]="[10, 25, 50]"
+  >
+    <ng-template #header>
+      <tr>
+        <th>Period</th>
+        <th pSortableColumn="PaymentAmount">
+          Invoice Amount
+          <p-sortIcon field="PaymentAmount" />
+        </th>
+        <th pSortableColumn="PaymentStatus">
+          Invoice Status
+          <p-sortIcon field="PaymentStatus" />
+        </th>
+        <th>Action</th>
+      </tr>
+    </ng-template>
+
+    <ng-template #body let-invoice>
+      <tr>
+        <td>
+          {{ invoice.startDate | date: "MMM d" }} - {{ invoice.endDate | date: "mediumDate" }}
+        </td>
+        <td>{{ invoice.total.amount | currency }}</td>
+        <td>
+          <app-invoice-status-tag [status]="invoice.status" />
+        </td>
+        <td>{{ getPaymentMethodDesc(invoice.payment.method) }}</td>
+        <td class="overflow-visible">
+          <!-- @if (invoice.status === "pending") {
+                <p-button
+                  icon="pi pi-credit-card"
+                  pTooltip="Make payment"
+                  tooltipPosition="bottom"
+                  [routerLink]="['/payment/payroll', invoice.id]"
+                />
+              } -->
+
+          <p-button
+            class="ms-2"
+            icon="pi pi-pen-to-square"
+            pTooltip="Edit payroll"
+            tooltipPosition="bottom"
+            [routerLink]="['/invoices/payroll', invoice.id, 'edit']"
+          />
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>

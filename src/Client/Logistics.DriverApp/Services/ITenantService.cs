@@ -1,8 +1,8 @@
-﻿namespace Logistics.DriverApp.Services;
+namespace Logistics.DriverApp.Services;
 
 public interface ITenantService
 {
-    Task<string?> GetTenantIdFromCacheAsync();
-    Task SaveTenantIdAsync(string tenantId);
+    Task<Guid?> GetTenantIdFromCacheAsync();
+    Task SaveTenantIdAsync(Guid tenantId);
     void ClearCache();
 }

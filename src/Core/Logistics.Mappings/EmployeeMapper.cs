@@ -1,4 +1,4 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Domain.Entities;
 using Logistics.Shared.Models;
 
 namespace Logistics.Mappings;
@@ -16,8 +16,6 @@ public static class EmployeeMapper
             FullName = entity.GetFullName(),
             PhoneNumber = entity.PhoneNumber,
             JoinedDate = entity.JoinedDate,
-            TruckNumber = entity.Truck?.TruckNumber,
-            TruckId = entity.TruckId,
             Salary = entity.Salary,
             SalaryType = entity.SalaryType,
             Roles = entity.Roles.Select(i => i.ToDto())

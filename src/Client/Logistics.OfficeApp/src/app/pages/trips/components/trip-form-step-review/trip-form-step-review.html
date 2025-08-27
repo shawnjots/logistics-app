@@ -1,0 +1,100 @@
+<div class="flex flex-col gap-4">
+  <div class="grid grid-cols-1 gap-4 px-1 md:grid-cols-3">
+    <p-card>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm opacity-70">Trip</div>
+          <div class="text-lg font-semibold">{{ tripName() || "—" }}</div>
+        </div>
+        <i class="pi pi-flag text-2xl opacity-60"></i>
+      </div>
+      <div class="mt-2 text-sm">
+        Truck:
+        <span class="font-medium">{{ truckId() || "—" }}</span>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm opacity-70">Loads</div>
+          <div class="text-lg font-semibold">
+            {{ totalLoads() }}
+            <span class="text-xs font-normal opacity-70">
+              (+{{ newLoadsCount() }} new, -{{ pendingDetachLoadsCount() }} pending)
+            </span>
+          </div>
+        </div>
+        <i class="pi pi-box text-2xl opacity-60"></i>
+      </div>
+    </p-card>
+
+    <p-card>
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="text-sm opacity-70">Totals</div>
+          <div>
+            Distance:
+            <span class="font-semibold">{{ totalDistance() | distanceUnit: "mi" }} mi</span>
+          </div>
+          <div>
+            Cost: <span class="font-semibold">{{ totalCost() | currency }}</span>
+          </div>
+        </div>
+        <i class="pi pi-chart-line text-2xl opacity-60"></i>
+      </div>
+    </p-card>
+  </div>
+
+  <!-- Trip Stops table -->
+  <p-card class="px-1">
+    <ng-template #header>
+      <div class="align-items-center flex gap-2 p-3 pb-0">
+        <h5>Stops</h5>
+      </div>
+    </ng-template>
+
+    <p-table
+      [value]="stops()"
+      [dataKey]="'id'"
+      sortField="order"
+      sortMode="single"
+      [paginator]="false"
+    >
+      <ng-template #header>
+        <tr>
+          <th pSortableColumn="order">#<p-sortIcon field="order" /></th>
+          <th>Type</th>
+          <th>Address</th>
+          <th>Arrived</th>
+        </tr>
+      </ng-template>
+      <ng-template #body let-tripStop>
+        <tr>
+          <td>{{ tripStop.order }}</td>
+          <td>{{ stopLabel(tripStop.type) }}</td>
+          <td>{{ tripStop.address | address }}</td>
+          <td>{{ tripStop.arrivedAt | date: "short" }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </p-card>
+
+  <app-direction-map [stops]="stopCoords()" height="700px" [zoom]="4" />
+
+  <div class="flex justify-between pt-6">
+    <p-button
+      type="button"
+      label="Back"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      (click)="back.emit()"
+    />
+    <p-button
+      type="button"
+      icon="pi pi-pen-to-square"
+      [label]="mode() === 'create' ? 'Create' : 'Update'"
+      (click)="save.emit()"
+    />
+  </div>
+</div>

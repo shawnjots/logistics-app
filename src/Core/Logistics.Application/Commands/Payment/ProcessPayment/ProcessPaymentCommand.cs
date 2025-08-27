@@ -1,12 +1,11 @@
-﻿using Logistics.Shared.Models;
-using Logistics.Shared.Consts;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
 
 namespace Logistics.Application.Commands;
 
-public class ProcessPaymentCommand : IRequest<Result>
+public class ProcessPaymentCommand : IAppRequest
 {
-    public string PaymentId { get; set; } = null!;
+    public Guid PaymentId { get; set; }
     public PaymentMethodType PaymentMethod { get; set; }
     public string? CardholderName { get; set; }
     public string? CardNumber { get; set; }

@@ -1,11 +1,12 @@
-﻿#nullable enable
+#nullable enable
+
 using System.Security.Claims;
 using Logistics.Domain.Entities;
-using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using Logistics.Domain.Persistence;
 using Logistics.IdentityServer.Extensions;
-using CustomClaimTypes = Logistics.Shared.Consts.Claims.CustomClaimTypes;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
+using CustomClaimTypes = Logistics.Shared.Identity.Claims.CustomClaimTypes;
 
 namespace Logistics.IdentityServer.Services;
 
@@ -13,15 +14,15 @@ public class UserCustomClaimsFactory : UserClaimsPrincipalFactory<User, AppRole>
 {
     private readonly HttpContext _httpContext;
     private readonly RoleManager<AppRole> _roleManager;
+    private readonly ITenantUnitOfWork _tenantUow;
     private readonly UserManager<User> _userManager;
-    private readonly ITenantUnityOfWork _tenantUow;
 
     public UserCustomClaimsFactory(
-        UserManager<User> userManager, 
-        RoleManager<AppRole> roleManager, 
+        UserManager<User> userManager,
+        RoleManager<AppRole> roleManager,
         IOptions<IdentityOptions> options,
         IHttpContextAccessor httpContextAccessor,
-        ITenantUnityOfWork tenantUow) 
+        ITenantUnitOfWork tenantUow)
         : base(userManager, roleManager, options)
     {
         _httpContext = httpContextAccessor.HttpContext!;
@@ -38,19 +39,19 @@ public class UserCustomClaimsFactory : UserClaimsPrincipalFactory<User, AppRole>
         AddProfileClaims(claimsIdentity, user);
         await AddAppRoleClaimsAsync(claimsIdentity, user);
 
-        if (string.IsNullOrEmpty(tenantId))
+        if (tenantId is null)
         {
             return claimsIdentity;
         }
-        
-        _tenantUow.SetCurrentTenantById(tenantId);
+
+        await _tenantUow.SetCurrentTenantByIdAsync(tenantId.Value);
         var employee = await _tenantUow.Repository<Employee>().GetByIdAsync(user.Id);
-        
-        claimsIdentity.AddClaim(new Claim(CustomClaimTypes.Tenant, tenantId));
+
+        claimsIdentity.AddClaim(new Claim(CustomClaimTypes.Tenant, tenantId.Value.ToString()));
         await AddTenantRoleClaimsAsync(claimsIdentity, employee);
         return claimsIdentity;
     }
-    
+
     private async Task AddAppRoleClaimsAsync(ClaimsIdentity claimsIdentity, User user)
     {
         var appRoles = await _userManager.GetRolesAsync(user);
@@ -63,12 +64,12 @@ public class UserCustomClaimsFactory : UserClaimsPrincipalFactory<User, AppRole>
             {
                 continue;
             }
-            
+
             var claims = await _roleManager.GetClaimsAsync(role);
             claimsIdentity.AddClaims(claims);
         }
     }
-    
+
     private async Task AddTenantRoleClaimsAsync(ClaimsIdentity claimsIdentity, Employee? employee)
     {
         if (employee is null)
@@ -92,6 +93,7 @@ public class UserCustomClaimsFactory : UserClaimsPrincipalFactory<User, AppRole>
         {
             claimsIdentity.AddClaim(new Claim("given_name", user.FirstName));
         }
+
         if (!string.IsNullOrEmpty(user.LastName))
         {
             claimsIdentity.AddClaim(new Claim("family_name", user.LastName));

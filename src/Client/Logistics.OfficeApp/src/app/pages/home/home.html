@@ -1,0 +1,155 @@
+<h1>Overview</h1>
+<hr class="w-full" />
+
+<div class="row g-3 mt-3">
+  <div class="col-xl-7 col-12">
+    <p-card>
+      <ng-template #header>
+        <h4 class="py-2 ps-3">Trucks</h4>
+        <hr class="m-0 w-full" />
+      </ng-template>
+      <app-trucks-map height="700px" />
+    </p-card>
+  </div>
+
+  <div class="col-xl-5 col-12">
+    <p-card styleClass="h-100">
+      <ng-template #header>
+        <h4 class="py-2 ps-3">Active loads</h4>
+        <hr class="m-0 w-full" />
+      </ng-template>
+
+      <p-table [value]="loads()" responsiveLayout="scroll" [loading]="isLoadingLoadsData()">
+        <ng-template #header>
+          <tr>
+            <th>ID</th>
+            <th>Current Location</th>
+            <th>Truck</th>
+          </tr>
+        </ng-template>
+        <ng-template #body let-load>
+          <tr>
+            <td>
+              <a [routerLink]="['/loads', load.id, 'edit']"> {{ load.number }} </a>
+            </td>
+            <td
+              [pTooltip]="formatAddress(load.currentAddress)"
+              [showDelay]="500"
+              tooltipPosition="bottom"
+            >
+              {{ load.currentAddress | address }}
+            </td>
+            <td>
+              <a [routerLink]="['/trucks/details', load.assignedTruckId]">
+                {{ load.assignedTruckNumber }}
+              </a>
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template #footer>
+          <tr>
+            <td colspan="4" class="text-start">
+              <p-button label="Add" [routerLink]="['/loads/add']" />
+              <p-button class="ms-2" label="View all loads" [routerLink]="['/loads']" />
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </p-card>
+  </div>
+</div>
+
+<div class="row g-3 mt-3">
+  <div class="col-12">
+    <p-card>
+      <ng-template #header>
+        <h4 class="py-2 ps-3">Weekly Report</h4>
+        <hr class="m-0 w-full" />
+      </ng-template>
+
+      @if (isLoadingChartData()) {
+        <div class="row">
+          <div class="col-md-4 col-12">
+            <p-skeleton height="3rem" />
+          </div>
+          <div class="col-md-4 col-12">
+            <p-skeleton height="3rem" />
+          </div>
+          <div class="col-md-4 col-12">
+            <p-skeleton height="3rem" />
+          </div>
+        </div>
+      } @else {
+        <div class="row">
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Total Gross:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyGross() | currency }}</span>
+          </div>
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Billed Miles:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyDistance() | distanceUnit: "mi" }}</span>
+          </div>
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Rate Per Mile:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyRpm() | currency }}</span>
+          </div>
+        </div>
+      }
+
+      <ng-template #data>
+        <div class="row">
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Total Gross:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyGross() | currency }}</span>
+          </div>
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Billed Miles:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyDistance() | distanceUnit: "mi" }}</span>
+          </div>
+          <div class="col-md-4 col-12 px-3">
+            <span class="text-secondary text-uppercase">Rate Per Mile:</span><br />
+            <span class="fw-bold fs-3">{{ weeklyRpm() | currency }}</span>
+          </div>
+        </div>
+      </ng-template>
+    </p-card>
+  </div>
+</div>
+
+<div class="row g-3 mt-3">
+  <div class="col-xl-7 col-12">
+    <p-card>
+      <ng-template #header>
+        <h4 class="py-2 ps-3">Daily Gross</h4>
+        <hr class="m-0 w-full" />
+      </ng-template>
+
+      @if (isLoadingChartData()) {
+        <div class="row">
+          <div class="col-12">
+            <p-skeleton height="20vh" />
+          </div>
+        </div>
+      } @else {
+        <div class="row">
+          <div class="col-md-3 col-12 mb-2">
+            <span class="fw-bold">Today Gross:</span><br />
+            <span class="fw-bold fs-3">{{ todayGross() | currency }}</span>
+          </div>
+          <div class="col-md-9 col-12">
+            <p-chart
+              type="line"
+              [data]="chartData()"
+              [options]="chartOptions()"
+              width="40vw"
+              height="20vh"
+            />
+          </div>
+        </div>
+      }
+    </p-card>
+  </div>
+  <div class="col-xl-5 col-12">
+    <app-notifications-panel height="400px" />
+  </div>
+</div>

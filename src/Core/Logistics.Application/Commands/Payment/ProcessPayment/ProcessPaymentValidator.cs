@@ -1,6 +1,7 @@
-﻿using FluentValidation;
-using Logistics.Shared;
-using Logistics.Shared.Consts;
+using FluentValidation;
+
+using Logistics.Application.Constants;
+using Logistics.Domain.Primitives.Enums;
 
 namespace Logistics.Application.Commands;
 
@@ -10,7 +11,7 @@ internal sealed class ProcessPaymentValidator : AbstractValidator<ProcessPayment
     {
         RuleFor(i => i.PaymentId).NotEmpty();
         RuleFor(i => i.BillingAddress).NotEmpty();
-        
+
         When(i => i.PaymentMethod == PaymentMethodType.Card, () =>
         {
             RuleFor(i => i.CardholderName).NotEmpty();
@@ -18,7 +19,7 @@ internal sealed class ProcessPaymentValidator : AbstractValidator<ProcessPayment
             RuleFor(i => i.CardExpirationDate).NotEmpty().Matches(RegexPatterns.CardExpirationDate);
             RuleFor(i => i.CardCvv).NotEmpty().Matches(RegexPatterns.CardCvc);
         });
-        
+
         When(i => i.PaymentMethod == PaymentMethodType.UsBankAccount, () =>
         {
             RuleFor(i => i.BankName).NotEmpty();

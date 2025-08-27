@@ -1,62 +1,53 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Utilities;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Commands;
 
-internal sealed class UpdateUserHandler : RequestHandler<UpdateUserCommand, Result>
+internal sealed class UpdateUserHandler : IAppRequestHandler<UpdateUserCommand, Result>
 {
-    private readonly IMasterUnityOfWork _masterUow;
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly IMasterUnitOfWork _masterUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
     public UpdateUserHandler(
-        IMasterUnityOfWork masterUow,
-        ITenantUnityOfWork tenantUow)
+        IMasterUnitOfWork masterUow,
+        ITenantUnitOfWork tenantUow)
     {
         _masterUow = masterUow;
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result> HandleValidated(
-        UpdateUserCommand req, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        UpdateUserCommand req, CancellationToken ct)
     {
-        var user = await _masterUow.Repository<User>().GetByIdAsync(req.Id);
+        var user = await _masterUow.Repository<User>().GetByIdAsync(req.Id, ct);
 
         if (user is null)
         {
             return Result.Fail("Could not find the specified user");
         }
 
-        if (!string.IsNullOrEmpty(req.FirstName))
+        user.FirstName = PropertyUpdater.UpdateIfChanged(req.FirstName, user.FirstName);
+        user.LastName = PropertyUpdater.UpdateIfChanged(req.LastName, user.LastName);
+        user.PhoneNumber = PropertyUpdater.UpdateIfChanged(req.PhoneNumber, user.PhoneNumber);
+
+        if (req.TenantId.HasValue)
         {
-            user.FirstName = req.FirstName;
+            await UpdateTenantEmployeeDataAsync(req.TenantId.Value, user, ct);
         }
 
-        if (!string.IsNullOrEmpty(req.LastName))
-        {
-            user.LastName = req.LastName;
-        }
-
-        if (!string.IsNullOrEmpty(req.PhoneNumber))
-        {
-            user.PhoneNumber = req.PhoneNumber;
-        }
-        
-        if (!string.IsNullOrEmpty(req.TenantId))
-        {
-            await UpdateTenantEmployeeDataAsync(req.TenantId, user);
-        }
-        
         _masterUow.Repository<User>().Update(user);
-        await _masterUow.SaveChangesAsync();
-        await _tenantUow.SaveChangesAsync();
-        return Result.Succeed();
+        await _masterUow.SaveChangesAsync(ct);
+        await _tenantUow.SaveChangesAsync(ct);
+        return Result.Ok();
     }
 
-    private async Task UpdateTenantEmployeeDataAsync(string tenantId, User user)
+    private async Task UpdateTenantEmployeeDataAsync(Guid tenantId, User user, CancellationToken ct = default)
     {
-        _tenantUow.SetCurrentTenantById(tenantId);
-        var employee = await _tenantUow.Repository<Employee>().GetByIdAsync(user.Id);
+        await _tenantUow.SetCurrentTenantByIdAsync(tenantId);
+        var employee = await _tenantUow.Repository<Employee>().GetByIdAsync(user.Id, ct);
 
         if (employee is null)
         {
@@ -67,6 +58,5 @@ internal sealed class UpdateUserHandler : RequestHandler<UpdateUserCommand, Resu
         employee.LastName = user.LastName;
         employee.Email = user.Email;
         employee.PhoneNumber = user.PhoneNumber;
-        _tenantUow.Repository<Employee>().Update(employee);
     }
 }

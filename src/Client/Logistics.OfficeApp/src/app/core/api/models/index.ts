@@ -1,11 +1,13 @@
-export * from "./result.model";
-export * from "./paged-result.model";
-export * from "./searchable-query.model";
-export * from "./paged-query.model";
-export * from "./paged-interval-query.model";
-export * from "./tenant.model";
-export * from "./user.model";
-export * from "./address.model";
+export * from "./result";
+export * from "./paged-result";
+export * from "./searchable.query";
+export * from "./paged.query";
+export * from "./paged-interval.query";
+export * from "./tenant.dto";
+export * from "./user.dto";
+export * from "./address.dto";
+export * from "./money.dto";
+export * from "./geo-point.dto";
 
 export * from "./subscription";
 export * from "./load";
@@ -16,4 +18,4 @@ export * from "./notification";
 export * from "./customer";
 export * from "./payment";
 export * from "./invoice";
-export * from "./payroll";
+export * from "./trip";

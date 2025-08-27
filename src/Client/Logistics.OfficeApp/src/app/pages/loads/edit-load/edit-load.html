@@ -1,0 +1,12 @@
+<h1>Edit a load #{{ loadNumber() }}</h1>
+<hr class="w-full" />
+
+<p-card>
+  <app-load-form
+    [mode]="'edit'"
+    [initial]="initialData()"
+    [isLoading]="isLoading()"
+    (save)="updateLoad($event)"
+    (remove)="deleteLoad()"
+  />
+</p-card>

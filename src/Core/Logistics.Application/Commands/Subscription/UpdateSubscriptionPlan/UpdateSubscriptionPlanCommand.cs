@@ -1,12 +1,11 @@
-﻿using Logistics.Shared.Consts;
-using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
 
 namespace Logistics.Application.Commands;
 
-public class UpdateSubscriptionPlanCommand : IRequest<Result>
+public class UpdateSubscriptionPlanCommand : IAppRequest
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
     public string? Name { get; set; }
     public string? Description { get; set; }
     public decimal? Price { get; set; }

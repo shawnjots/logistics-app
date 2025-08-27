@@ -1,18 +1,20 @@
-﻿using Logistics.Domain.Core;
+using Logistics.Domain.Core;
 using Microsoft.AspNetCore.Identity;
 
 namespace Logistics.Domain.Entities;
 
-public class User : IdentityUser, IEntity<string>, IAuditableEntity
+public class User : IdentityUser<Guid>, IEntity<Guid>, IMasterEntity, IAuditableEntity
 {
-    public string FirstName { get; set; } = null!;
-    public string LastName { get; set; } = null!;
+    public required string FirstName { get; set; }
+    public required string LastName { get; set; }
+
+    public Guid? TenantId { get; set; }
     public virtual Tenant? Tenant { get; set; }
-    public string? TenantId { get; set; }
-    public DateTime Created { get; set; } = DateTime.UtcNow;
+
+    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public string? CreatedBy { get; set; }
-    public DateTime? LastModified { get; set; }
-    public string? LastModifiedBy { get; set; }
+    public DateTime? UpdatedAt { get; set; }
+    public string? UpdatedBy { get; set; }
 
     public string GetFullName()
     {

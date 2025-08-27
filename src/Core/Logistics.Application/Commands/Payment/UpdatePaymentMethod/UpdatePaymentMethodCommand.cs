@@ -1,13 +1,12 @@
-﻿using Logistics.Domain.ValueObjects;
-using Logistics.Shared.Models;
-using Logistics.Shared.Consts;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
+using Logistics.Domain.Primitives.ValueObjects;
 
 namespace Logistics.Application.Commands;
 
-public class UpdatePaymentMethodCommand : IRequest<Result>
+public class UpdatePaymentMethodCommand : IAppRequest
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
     public PaymentMethodType Type { get; set; }
     public Address? BillingAddress { get; set; }
 

@@ -1,10 +1,11 @@
-﻿using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
+using Logistics.Domain.Primitives.Enums;
 
 namespace Logistics.Application.Commands;
 
-public class CreateTruckCommand : IRequest<Result>
+public class CreateTruckCommand : IAppRequest
 {
-    public string? TruckNumber { get; set; }
-    public string[]? DriversIds { get; set; }
+    public string TruckNumber { get; set; } = null!;
+    public TruckType TruckType { get; set; }
+    public Guid MainDriverId { get; set; }
 }

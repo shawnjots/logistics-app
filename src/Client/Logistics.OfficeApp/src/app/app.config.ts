@@ -1,28 +1,45 @@
-import {provideHttpClient, withInterceptors} from "@angular/common/http";
-import {ApplicationConfig, importProvidersFrom} from "@angular/core";
+import {
+  ApplicationConfig,
+  importProvidersFrom,
+  provideZonelessChangeDetection,
+} from "@angular/core";
 import {BrowserModule} from "@angular/platform-browser";
-import {provideAnimations} from "@angular/platform-browser/animations";
+import {provideAnimationsAsync} from "@angular/platform-browser/animations/async";
 import {provideRouter, withComponentInputBinding} from "@angular/router";
-import Aura from "@primeng/themes/aura";
+import Aura from "@primeuix/themes/aura";
 import {provideAuth} from "angular-auth-oidc-client";
+import {provideMapboxGL} from "ngx-mapbox-gl";
 import {ConfirmationService, MessageService} from "primeng/api";
 import {providePrimeNG} from "primeng/config";
-import {authConfig} from "@/configs";
-import {tenantInterceptor, tokenInterceptor} from "@/core/interceptors";
+import {provideApi} from "@/core/api";
+import {authConfig} from "@/core/auth";
+import {tenantInterceptor} from "@/core/interceptors";
+import {environment} from "@/env";
+import {getAccessToken} from "@/shared/utils";
 import {appRoutes} from "./app.routes";
 
 export const appConfig: ApplicationConfig = {
   providers: [
+    provideZonelessChangeDetection(),
     provideAuth({config: authConfig}),
     provideRouter(appRoutes, withComponentInputBinding()),
     importProvidersFrom(BrowserModule),
-    provideAnimations(),
-    provideHttpClient(withInterceptors([tenantInterceptor, tokenInterceptor])),
+    provideAnimationsAsync(),
+    provideApi({
+      baseUrl: environment.apiBaseUrl,
+      interceptors: [tenantInterceptor],
+      tokenGetter: getAccessToken,
+    }),
     providePrimeNG({
       theme: {
         preset: Aura,
+        options: {
+          darkModeSelector: false, // force light only
+        },
       },
     }),
+    provideMapboxGL({accessToken: environment.mapboxToken}),
+
     MessageService,
     ConfirmationService,
   ],

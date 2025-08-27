@@ -1,4 +1,4 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Domain.Entities;
 using Logistics.Shared.Models;
 
 namespace Logistics.Mappings;
@@ -10,17 +10,15 @@ public static class TruckMapper
         var dto = new TruckDto
         {
             Id = entity.Id,
-            TruckNumber = entity.TruckNumber,
-            CurrentLocationLat = entity.CurrentLocationLat,
-            CurrentLocationLong = entity.CurrentLocationLong,
+            Number = entity.Number,
+            Type = entity.Type,
+            Status = entity.Status,
+            CurrentLocation = entity.CurrentLocation,
+            CurrentAddress = entity.CurrentAddress,
             Loads = loads,
-            Drivers = entity.Drivers.Select(i => i.ToDto())
+            MainDriver = entity.MainDriver?.ToDto(),
+            SecondaryDriver = entity.SecondaryDriver?.ToDto(),
         };
-
-        if (entity.CurrentLocation.IsNotNull())
-        {
-            dto.CurrentLocation = entity.CurrentLocation.ToDto();
-        }
         return dto;
     }
 }

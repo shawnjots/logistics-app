@@ -1,9 +1,11 @@
-﻿using System.Reflection;
+using System.Reflection;
+
 using FluentValidation;
+
 using Logistics.Application.Behaviours;
 using Logistics.Application.Hubs;
 using Logistics.Application.Services;
-using MediatR;
+
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -45,7 +47,7 @@ public static class Registrar
             });
             services.AddSingleton<ICaptchaService, GoogleRecaptchaService>();
         }
-        
+
         if (stripeOptions is not null)
         {
             services.Configure<StripeOptions>(options =>
@@ -56,18 +58,23 @@ public static class Registrar
             });
             services.AddSingleton<IStripeService, StripeService>();
         }
-        
+
         services.AddSignalR();
         services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly(), includeInternalTypes: true);
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Registrar).Assembly));
-        
+        services.AddMediatR(cfg =>
+        {
+            cfg.RegisterServicesFromAssembly(typeof(Registrar).Assembly);
+            cfg.AddOpenBehavior(typeof(LoggingBehavior<,>));
+            cfg.AddOpenBehavior(typeof(UnhandledExceptionBehaviour<,>));
+            cfg.AddOpenBehavior(typeof(ValidationBehaviour<,>));
+        });
+
         services.AddSingleton<IPushNotificationService, PushNotificationService>();
         services.AddSingleton<IStripeService, StripeService>();
         services.AddSingleton<LiveTrackingHubContext>();
         services.AddScoped<IPayrollService, PayrollService>();
         services.AddScoped<INotificationService, NotificationService>();
-        // services.AddTransient(typeof(IPipelineBehavior<,>), typeof(UnhandledExceptionBehaviour<,>));
-        services.AddTransient(typeof(IPipelineBehavior<,>), typeof(ValidationBehaviour<,>));
+        services.AddScoped<ILoadService, LoadService>();
         return services;
     }
 }

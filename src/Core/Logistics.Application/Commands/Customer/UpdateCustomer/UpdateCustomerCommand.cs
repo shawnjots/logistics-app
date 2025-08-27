@@ -1,10 +1,9 @@
-﻿using Logistics.Shared.Models;
-using MediatR;
+using Logistics.Application.Abstractions;
 
 namespace Logistics.Application.Commands;
 
-public class UpdateCustomerCommand : IRequest<Result>
+public class UpdateCustomerCommand : IAppRequest
 {
-    public string Id { get; set; } = null!;
+    public Guid Id { get; set; }
     public string Name { get; set; } = null!;
 }

@@ -1,20 +1,22 @@
-﻿using Logistics.Domain.Entities;
+using Logistics.Application.Abstractions;
+using Logistics.Application.Utilities;
+using Logistics.Domain.Entities;
 using Logistics.Domain.Persistence;
 using Logistics.Shared.Models;
 
 namespace Logistics.Application.Commands;
 
-internal sealed class UpdatePaymentHandler : RequestHandler<UpdatePaymentCommand, Result>
+internal sealed class UpdatePaymentHandler : IAppRequestHandler<UpdatePaymentCommand, Result>
 {
-    private readonly ITenantUnityOfWork _tenantUow;
+    private readonly ITenantUnitOfWork _tenantUow;
 
-    public UpdatePaymentHandler(ITenantUnityOfWork tenantUow)
+    public UpdatePaymentHandler(ITenantUnitOfWork tenantUow)
     {
         _tenantUow = tenantUow;
     }
 
-    protected override async Task<Result> HandleValidated(
-        UpdatePaymentCommand req, CancellationToken cancellationToken)
+    public async Task<Result> Handle(
+        UpdatePaymentCommand req, CancellationToken ct)
     {
         var payment = await _tenantUow.Repository<Payment>().GetByIdAsync(req.Id);
 
@@ -23,33 +25,39 @@ internal sealed class UpdatePaymentHandler : RequestHandler<UpdatePaymentCommand
             return Result.Fail($"Could not find a payment with ID '{req.Id}'");
         }
 
-        if (req.PaymentFor.HasValue && payment.PaymentFor != req.PaymentFor)
+        var updateResult = await TryUpdatePaymentMethod(payment, req.PaymentMethodId);
+
+        if (!updateResult.Success)
         {
-            payment.PaymentFor = req.PaymentFor.Value;
+            return updateResult;
         }
-        if (req.Method.HasValue && payment.Method != req.Method)
-        {
-            payment.Method = req.Method.Value;
-        }
-        if (req.Status.HasValue && payment.Status != req.Status)
-        {
-            payment.SetStatus(req.Status.Value);
-        }
-        if (req.Amount.HasValue && payment.Amount != req.Amount)
-        {
-            payment.Amount = req.Amount.Value;
-        }
-        if (req.BillingAddress != null && payment.BillingAddress != req.BillingAddress)
-        {
-            payment.BillingAddress = req.BillingAddress;
-        }
-        if (!string.IsNullOrEmpty(req.Notes) && payment.Notes != req.Notes)
-        {
-            payment.Notes = req.Notes;
-        }
-        
+
+        payment.Status = PropertyUpdater.UpdateIfChanged(req.Status, payment.Status);
+        payment.Amount = PropertyUpdater.UpdateIfChanged(req.Amount, payment.Amount.Amount);
+        payment.BillingAddress = PropertyUpdater.UpdateIfChanged(req.BillingAddress, payment.BillingAddress);
+        payment.Description = PropertyUpdater.UpdateIfChanged(req.Description, payment.Description);
+
         _tenantUow.Repository<Payment>().Update(payment);
         await _tenantUow.SaveChangesAsync();
-        return Result.Succeed();
+        return Result.Ok();
+    }
+
+    private async Task<Result> TryUpdatePaymentMethod(Payment payment, Guid? paymentMethodId)
+    {
+        if (!paymentMethodId.HasValue || payment.MethodId == paymentMethodId)
+        {
+            return Result.Ok();
+        }
+
+        var paymentMethod = await _tenantUow.Repository<PaymentMethod>()
+            .GetByIdAsync(paymentMethodId.Value);
+
+        if (paymentMethod is null)
+        {
+            return Result.Fail($"Could not find a payment method with ID '{paymentMethodId}'");
+        }
+
+        payment.MethodId = paymentMethod.Id;
+        return Result.Ok();
     }
 }

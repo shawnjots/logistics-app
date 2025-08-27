@@ -1,0 +1,86 @@
+<p-card>
+  <ng-template #header>
+    <h4 class="py-2 ps-3">
+      Truck statistics for <span class="text-danger">{{ startDate() | date: "shortDate" }}</span> -
+      <span class="text-danger">{{ endDate() | date: "shortDate" }}</span>
+    </h4>
+    <hr class="m-0 w-full" />
+  </ng-template>
+
+  <div class="mb-2">
+    <app-range-calendar
+      [(startDate)]="startDate"
+      [(endDate)]="endDate"
+      (applyButtonClick)="reloadTable()"
+    />
+  </div>
+
+  <p-table
+    [value]="truckStats()"
+    responsiveLayout="scroll"
+    [lazy]="true"
+    [paginator]="true"
+    [showCurrentPageReport]="true"
+    (onLazyLoad)="fetchTrucksStats($event)"
+    [rows]="10"
+    [totalRecords]="totalRecords()"
+    [loading]="isLoading()"
+    [rowsPerPageOptions]="[10, 25, 50]"
+  >
+    <ng-template #header>
+      <tr>
+        <th pSortableColumn="TruckNumber">
+          Truck Number
+          <p-sortIcon field="TruckNumber" />
+        </th>
+        <th pSortableColumn="Gross">
+          Gross
+          <p-sortIcon field="Gross" />
+        </th>
+        <th pSortableColumn="DriverShare">
+          Driver Share
+          <p-sortIcon field="DriverShare" />
+        </th>
+        <th pSortableColumn="Distance">
+          Traveled Distance (mi)
+          <p-sortIcon field="Distance" />
+        </th>
+        <th>Drivers</th>
+        <th>
+          <span>Action</span>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template #body let-truckStats>
+      <tr>
+        <td>{{ truckStats().truckNumber }}</td>
+        <td>{{ truckStats().gross | currency }}</td>
+        <td>{{ truckStats().driverShare | currency }}</td>
+        <td>{{ truckStats().distance | distanceUnit: "mi" }}</td>
+        <td>
+          @for (driver of truckStats().drivers; track driver.id) {
+            <span>
+              {{ driver.fullName }}
+              @if (truckStats().drivers.length > 1) {
+                <span>,</span>
+              }
+            </span>
+          }
+        </td>
+        <td class="overflow-visible">
+          <p-button
+            icon="pi pi-book"
+            pTooltip="View details"
+            [routerLink]="['/trucks', truckStats().truckId]"
+          />
+          <p-button
+            class="ms-2"
+            icon="pi pi-pen-to-square"
+            pTooltip="Edit"
+            [routerLink]="['/trucks', truckStats().truckId, 'edit']"
+          />
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-card>
