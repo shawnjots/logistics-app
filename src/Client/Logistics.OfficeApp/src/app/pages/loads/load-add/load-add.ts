@@ -9,11 +9,11 @@ import {ToastService} from "@/core/services";
 import {LoadFormComponent, LoadFormValue} from "@/shared/components";
 
 @Component({
-  selector: "app-add-load",
-  templateUrl: "./add-load.html",
+  selector: "app-load-add",
+  templateUrl: "./load-add.html",
   imports: [ToastModule, CardModule, ProgressSpinnerModule, LoadFormComponent],
 })
-export class AddLoadComponent {
+export class LoadAddComponent {
   private readonly apiService = inject(ApiService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
@@ -25,7 +25,7 @@ export class AddLoadComponent {
 
     const command: CreateLoadCommand = {
       name: formValue.name,
-      loadType: formValue.type,
+      type: formValue.type,
       originAddress: formValue.originAddress,
       originLocation: formValue.originLocation,
       destinationAddress: formValue.destinationAddress,

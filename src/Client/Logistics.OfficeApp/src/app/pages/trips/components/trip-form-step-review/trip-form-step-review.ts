@@ -1,12 +1,15 @@
 import {CurrencyPipe, DatePipe} from "@angular/common";
-import {Component, input, output} from "@angular/core";
+import {Component, input, output, signal} from "@angular/core";
 import {ButtonModule} from "primeng/button";
 import {CardModule} from "primeng/card";
 import {TableModule} from "primeng/table";
 import {TripStopDto, TripStopType} from "@/core/api/models";
 import {DirectionMap} from "@/shared/components";
+import type {
+  RouteSegmentClickEvent,
+  WaypointClickEvent,
+} from "@/shared/components/direction-map/types";
 import {AddressPipe, DistanceUnitPipe} from "@/shared/pipes";
-import {GeoPoint} from "@/shared/types/mapbox";
 
 @Component({
   selector: "app-trip-form-step-review",
@@ -36,15 +39,19 @@ export class TripFormStepReview {
   public readonly back = output<void>();
   public readonly save = output<void>();
 
-  protected stopCoords(): GeoPoint[] {
-    return (
-      this.stops()
-        .sort((a, b) => a.order - b.order)
-        .map((s) => [s.location.longitude, s.location.latitude] as GeoPoint) ?? []
-    );
-  }
+  protected readonly selectedStop = signal<TripStopDto | null>(null);
 
   protected stopLabel(tripStopType: TripStopType): string {
     return tripStopType === TripStopType.PickUp ? "Pick Up" : "Drop Off";
+  }
+
+  protected onRouteSegmentClick(e: RouteSegmentClickEvent) {
+    const stop = this.stops().find((s) => s.id === e.fromWaypoint.id);
+    this.selectedStop.set(stop ?? null);
+  }
+
+  protected onWaypointClick(e: WaypointClickEvent) {
+    const stop = this.stops().find((s) => s.id === e.waypoint.id);
+    this.selectedStop.set(stop ?? null);
   }
 }

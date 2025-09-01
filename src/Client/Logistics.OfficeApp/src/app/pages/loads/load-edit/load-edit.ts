@@ -12,8 +12,8 @@ import {LoadFormComponent, LoadFormValue} from "@/shared/components";
 import {Converters} from "@/shared/utils";
 
 @Component({
-  selector: "app-edit-load",
-  templateUrl: "./edit-load.html",
+  selector: "app-load-edit",
+  templateUrl: "./load-edit.html",
   imports: [
     CommonModule,
     ToastModule,
@@ -23,7 +23,7 @@ import {Converters} from "@/shared/utils";
     LoadFormComponent,
   ],
 })
-export class EditLoadComponent implements OnInit {
+export class LoadEditComponent implements OnInit {
   private readonly apiService = inject(ApiService);
   private readonly toastService = inject(ToastService);
   private readonly router = inject(Router);
@@ -46,7 +46,7 @@ export class EditLoadComponent implements OnInit {
     const command: UpdateLoadCommand = {
       id: this.id()!,
       name: formValue.name!,
-      loadType: formValue.type!,
+      type: formValue.type!,
       originAddress: formValue.originAddress!,
       originLocation: formValue.originLocation,
       destinationAddress: formValue.destinationAddress!,
