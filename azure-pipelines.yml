@@ -233,6 +233,8 @@ stages:
                 dotnet workload install android
                 dotnet workload install ios  
                 dotnet workload install maui
+                dotnet workload install maui-tizen
+                dotnet workload install wasm-tools
                 
           - task: DotNetCoreCLI@2
             displayName: 'Restore Dependencies'
