@@ -22,7 +22,7 @@ variables:
   buildConfiguration: 'Release'
   dotNetVersion: '9.0.x'
   vmImageName: 'ubuntu-latest'
-  PRESENTATION_PROJECTS_DIR: './src/Presentation'
+  PRESENTATION_PROJECTS_DIR: 'src/Presentation'
   CLIENT_PROJECTS_DIR: './src/Client'
   # Set this to true to enable Docker builds
   buildDockerImages: true
@@ -52,7 +52,7 @@ stages:
             displayName: 'Restore Dependencies (presentation projects only)'
             inputs:
               command: 'restore'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/**/*.*.csproj'
+              projects: '$(PRESENTATION_PROJECTS_DIR)/**/*.csproj'
               
           - task: DotNetCoreCLI@2
             displayName: 'Build API Project'
