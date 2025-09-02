@@ -4,8 +4,8 @@
 trigger:
   branches:
     include:
-      - prime
-      - main
+      - release
+      - dev
   paths:
     exclude:
       - README.md
@@ -15,8 +15,8 @@ trigger:
 pr:
   branches:
     include:
-      - prime
-      - main
+      - release
+      - dev
 
 variables:
   buildConfiguration: 'Release'
