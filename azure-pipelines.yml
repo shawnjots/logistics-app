@@ -60,28 +60,28 @@ stages:
             inputs:
               command: 'build'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --no-restore'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
               
           - task: DotNetCoreCLI@2
             displayName: 'Build Identity Server'
             inputs:
               command: 'build'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --no-restore'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
               
           - task: DotNetCoreCLI@2
             displayName: 'Build DB Migrator'
             inputs:
               command: 'build'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --no-restore'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
               
           - task: DotNetCoreCLI@2
             displayName: 'Publish API'
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --output $(Build.ArtifactStagingDirectory)/api --no-build'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api --no-build'
               publishWebProjects: false
               zipAfterPublish: true
               
@@ -90,7 +90,7 @@ stages:
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --output $(Build.ArtifactStagingDirectory)/identity --no-build'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/identity --no-build'
               publishWebProjects: false
               zipAfterPublish: true
               
@@ -99,7 +99,7 @@ stages:
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --output $(Build.ArtifactStagingDirectory)/migrator --no-build'
+              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/migrator --no-build'
               publishWebProjects: false
               zipAfterPublish: true
               
