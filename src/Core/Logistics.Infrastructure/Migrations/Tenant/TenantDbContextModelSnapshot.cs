@@ -296,7 +296,7 @@ namespace Logistics.Infrastructure.Migrations.Tenant
                         .HasColumnType("character varying(50)")
                         .HasColumnName("CreatedBy");
 
-                    b.Property<Guid?>("CustomerId")
+                    b.Property<Guid>("CustomerId")
                         .HasColumnType("uuid");
 
                     b.Property<DateTime?>("DeliveredAt")
@@ -1174,7 +1174,9 @@ namespace Logistics.Infrastructure.Migrations.Tenant
 
                     b.HasOne("Logistics.Domain.Entities.Customer", "Customer")
                         .WithMany()
-                        .HasForeignKey("CustomerId");
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.HasOne("Logistics.Domain.Entities.TripStop", "TripStop")
                         .WithOne("Load")
