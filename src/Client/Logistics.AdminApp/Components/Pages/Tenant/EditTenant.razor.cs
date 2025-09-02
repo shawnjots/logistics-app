@@ -59,8 +59,8 @@ public partial class EditTenant : PageBase
             {
                 Id = _tenant.Id,
                 CompanyName = _tenant.CompanyName,
-                Name = _tenant.Name,
-                CompanyAddress = _tenant.CompanyAddress
+                    Name = _tenant.Name,
+                    CompanyAddress = _tenant.CompanyAddress
             }));
 
             if (!success)

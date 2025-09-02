@@ -35,10 +35,11 @@ builder.AddProject<Projects.Logistics_AdminApp>("admin-app")
     .WaitFor(logisticsApi)
     .WaitFor(identityServer);
 
+var officeAppUrl = builder.Configuration["OfficeApp:Url"] ?? "http://localhost:7003";
 builder.AddBunApp("office-app", "../../Client/Logistics.OfficeApp", entryPoint: "start", watch: true)
     .WithBunPackageInstallation()
     .WithHttpEndpoint()
-    .WithUrl("http://localhost:7003")
+    .WithUrl(officeAppUrl)
     .WaitFor(logisticsApi)
     .WaitFor(identityServer);
 
