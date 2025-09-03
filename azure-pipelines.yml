@@ -34,96 +34,72 @@ stages:
     displayName: 'Build Applications'
     jobs:
       
-      # Build MAUI Mobile App
-      - job: 'BuildMauiApp'
-        displayName: 'Build MAUI Mobile App'
+       # Build Docker Images
+      - job: 'BuildDockerImages'
+        displayName: 'Build Docker Images'
         pool:
-          vmImage: 'windows-latest'
+          vmImage: $(vmImageName)
+        condition: eq(variables['buildDockerImages'], 'true')
           
         steps:
           - checkout: self
             fetchDepth: 1
             
-          - task: UseDotNet@2
-            displayName: 'Setup .NET SDK'
+          - task: Docker@2
+            displayName: 'Build API Docker Image'
             inputs:
-              packageType: 'sdk'
-              version: $(dotNetVersion)
-              
-          - task: PowerShell@2
-            displayName: 'Install MAUI Workloads'
-            inputs:
-              targetType: 'inline'
-              script: |
-                dotnet workload install android
-                dotnet workload install ios  
-                dotnet workload install maui
-                dotnet workload install maui-tizen
-                dotnet workload install wasm-tools
+              containerRegistry: # Configure this with your container registry service connection
+              repository: 'logistics-api'
+              command: 'build'
+              Dockerfile: 'src/Presentation/Logistics.API/Dockerfile'
+              buildContext: '.'
+              tags: |
+                $(Build.BuildId)
+                latest
                 
-          - task: DotNetCoreCLI@2
-            displayName: 'Restore Dependencies'
+          - task: Docker@2
+            displayName: 'Build Identity Server Docker Image'  
             inputs:
-              command: 'restore'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
-
-          - task: PowerShell@2
-            displayName: 'Diagnostic: List resolved NuGet packages for DriverApp'
-            inputs:
-              targetType: 'inline'
-              script: |
-                dotnet --info
-                dotnet list "$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj" package --include-transitive
-                echo 'Searching for Xamarin.AndroidX.SavedState in global packages folder'
-                $pkgPath = (dotnet nuget locals global-packages --list) -replace 'global-packages:\s*',''
-                if (Test-Path $pkgPath) {
-                  Get-ChildItem -Path $pkgPath -Recurse -Filter 'Xamarin.AndroidX.SavedState*' -ErrorAction SilentlyContinue | Select-Object FullName -First 50
-                } else {
-                  echo "Global packages folder not found: $pkgPath"
-                }
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build MAUI Driver App (AOT enabled)'
-            condition: eq(variables['enableAot'], 'true')
-            inputs:
+              containerRegistry: # Configure this with your container registry service connection
+              repository: 'logistics-identity'
               command: 'build'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Build MAUI Driver App (AOT disabled - CI)'
-            condition: ne(variables['enableAot'], 'true')
+              Dockerfile: 'src/Presentation/Logistics.IdentityServer/Dockerfile'
+              buildContext: '.'
+              tags: |
+                $(Build.BuildId)
+                latest
+                
+          - task: Docker@2
+            displayName: 'Build Admin App Docker Image'
             inputs:
+              containerRegistry: # Configure this with your container registry service connection  
+              repository: 'logistics-admin'
               command: 'build'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
-              arguments: '--configuration $(buildConfiguration) -p:RunAOTCompilation=false -p:AndroidEnableAot=false -p:AndroidEnableProfiledAot=false --no-restore'
+              Dockerfile: 'src/Client/Logistics.AdminApp/Dockerfile'
+              buildContext: '.'
+              tags: |
+                $(Build.BuildId)
+                latest
+            condition: exists('src/Client/Logistics.AdminApp/Dockerfile')
+            
+          # Save Docker images as artifacts
+          - task: Docker@2
+            displayName: 'Save API Docker Image'
+            inputs:
+              command: 'save'
+              arguments: '-o $(Build.ArtifactStagingDirectory)/logistics-api.tar logistics-api:$(Build.BuildId)'
               
-          # Publish Android APK
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish Android APK (AOT enabled)'
-            condition: eq(variables['enableAot'], 'true')
+          - task: Docker@2
+            displayName: 'Save Identity Docker Image'
             inputs:
-              command: 'publish'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
-              arguments: '--configuration $(buildConfiguration) --framework net9.0-android --output $(Build.ArtifactStagingDirectory)/android'
-              publishWebProjects: false
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish Android APK (AOT disabled - CI)'
-            condition: ne(variables['enableAot'], 'true')
-            inputs:
-              command: 'publish'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
-              arguments: '--configuration $(buildConfiguration) --framework net9.0-android -p:RunAOTCompilation=false -p:AndroidEnableAot=false -p:AndroidEnableProfiledAot=false --output $(Build.ArtifactStagingDirectory)/android'
-              publishWebProjects: false
+              command: 'save'
+              arguments: '-o $(Build.ArtifactStagingDirectory)/logistics-identity.tar logistics-identity:$(Build.BuildId)'
               
           - task: PublishBuildArtifacts@1
-            displayName: 'Publish MAUI App Artifacts'
+            displayName: 'Publish Docker Images'
             inputs:
               pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'mobile-app'
-              
-      # Build Docker Images
+              artifactName: 'docker-images'
       
 
   - stage: 'Test'
