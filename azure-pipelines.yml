@@ -77,7 +77,7 @@ stages:
               arguments: '--configuration $(buildConfiguration) --no-restore'
               
           - task: DotNetCoreCLI@2
-            displayName: 'Publish API'
+            displayName: 'Publish API' 
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
