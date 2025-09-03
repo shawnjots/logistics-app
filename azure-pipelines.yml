@@ -48,12 +48,27 @@ stages:
               packageType: 'sdk'
               version: $(dotNetVersion)
               
+          # Restore runtime-specific projects (with PublishSingleFile=true)
           - task: DotNetCoreCLI@2
-            displayName: 'Restore Dependencies (presentation projects only)'
+            displayName: 'Restore API Project'
             inputs:
               command: 'restore'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/**/*.csproj'
+              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
               arguments: '--runtime linux-x64'
+              
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore Identity Server'
+            inputs:
+              command: 'restore'
+              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
+              arguments: '--runtime linux-x64'
+              
+          # Restore framework-dependent project (without PublishSingleFile)
+          - task: DotNetCoreCLI@2
+            displayName: 'Restore DB Migrator'
+            inputs:
+              command: 'restore'
+              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
               
           - task: DotNetCoreCLI@2
             displayName: 'Build API Project'
@@ -74,7 +89,7 @@ stages:
             inputs:
               command: 'build'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --no-restore'
+              arguments: '--configuration $(buildConfiguration) --no-restore'
               
           - task: DotNetCoreCLI@2
             displayName: 'Publish API' 
