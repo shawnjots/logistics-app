@@ -53,7 +53,7 @@ stages:
             inputs:
               command: 'restore'
               projects: '$(PRESENTATION_PROJECTS_DIR)/**/*.csproj'
-              arguments: '--runtime linux-x64'
+              arguments: '--runtime linux-x64 -p:RuntimeIdentifier=linux-x64'
               
           - task: DotNetCoreCLI@2
             displayName: 'Build API Project'
@@ -81,7 +81,7 @@ stages:
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/api --no-build'
+              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/api'
               publishWebProjects: false
               zipAfterPublish: true
               
@@ -90,7 +90,7 @@ stages:
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/identity --no-build'
+              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/identity'
               publishWebProjects: false
               zipAfterPublish: true
               
@@ -99,7 +99,7 @@ stages:
             inputs:
               command: 'publish'
               projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/migrator --no-build'
+              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/migrator'
               publishWebProjects: false
               zipAfterPublish: true
               
