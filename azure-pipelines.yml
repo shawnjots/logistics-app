@@ -24,6 +24,8 @@ variables:
   vmImageName: 'ubuntu-latest'
   PRESENTATION_PROJECTS_DIR: 'src/Presentation'
   CLIENT_PROJECTS_DIR: './src/Client'
+  # Set to true to enable MAUI AOT steps in CI
+  enableAot: false
   # Set this to true to enable Docker builds
   buildDockerImages: true
 
@@ -32,190 +34,6 @@ stages:
     displayName: 'Build Applications'
     jobs:
       
-      # Build .NET Backend Services
-      - job: 'BuildBackend'
-        displayName: 'Build .NET Backend Services'
-        pool:
-          vmImage: $(vmImageName)
-        
-        steps:
-          - checkout: self
-            fetchDepth: 1
-            
-          - task: UseDotNet@2
-            displayName: 'Setup .NET SDK'
-            inputs:
-              packageType: 'sdk'
-              version: $(dotNetVersion)
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Restore Dependencies (presentation projects only)'
-            inputs:
-              command: 'restore'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/**/*.csproj'
-              arguments: '--runtime linux-x64 -p:RuntimeIdentifier=linux-x64'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build API Project'
-            inputs:
-              command: 'build'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build Identity Server'
-            inputs:
-              command: 'build'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build DB Migrator'
-            inputs:
-              command: 'build'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish API' 
-            inputs:
-              command: 'publish'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.API/Logistics.API.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/api'
-              publishWebProjects: false
-              zipAfterPublish: true
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish Identity Server'
-            inputs:
-              command: 'publish'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.IdentityServer/Logistics.IdentityServer.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/identity'
-              publishWebProjects: false
-              zipAfterPublish: true
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish DB Migrator'
-            inputs:
-              command: 'publish'
-              projects: '$(PRESENTATION_PROJECTS_DIR)/Logistics.DbMigrator/Logistics.DbMigrator.csproj'
-              arguments: '--configuration $(buildConfiguration) --runtime linux-x64 --self-contained true -p:RuntimeIdentifier=linux-x64 --output $(Build.ArtifactStagingDirectory)/migrator'
-              publishWebProjects: false
-              zipAfterPublish: true
-              
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Backend Artifacts'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'backend-services'
-              
-      # Build .NET Client Applications  
-      - job: 'BuildDotNetClients'
-        displayName: 'Build .NET Client Applications'
-        pool:
-          vmImage: $(vmImageName)
-          
-        steps:
-          - checkout: self
-            fetchDepth: 1
-            
-          - task: UseDotNet@2
-            displayName: 'Setup .NET SDK'
-            inputs:
-              packageType: 'sdk'
-              version: $(dotNetVersion)
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Restore Admin App Dependencies'
-            inputs:
-              command: 'restore'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.AdminApp/Logistics.AdminApp.csproj'
-
-          - task: DotNetCoreCLI@2
-            displayName: 'Restore HTTP Client Dependencies'
-            inputs:
-              command: 'restore'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.HttpClient/Logistics.HttpClient.csproj'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build Admin App'
-            inputs:
-              command: 'build'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.AdminApp/Logistics.AdminApp.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Build HTTP Client Library'
-            inputs:
-              command: 'build'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.HttpClient/Logistics.HttpClient.csproj'
-              arguments: '--configuration $(buildConfiguration) --no-restore'
-              
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish Admin App'
-            inputs:
-              command: 'publish'
-              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.AdminApp/Logistics.AdminApp.csproj'
-              arguments: '--configuration $(buildConfiguration) --output $(Build.ArtifactStagingDirectory)/admin-app --no-build'
-              publishWebProjects: false
-              zipAfterPublish: true
-              
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Client App Artifacts'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'client-apps'
-              
-      # Build Office App (Bun-based Frontend)
-      - job: 'BuildOfficeApp'
-        displayName: 'Build Office App (Frontend)'
-        pool:
-          vmImage: $(vmImageName)
-        
-        steps:
-          - checkout: self
-            fetchDepth: 1
-            
-          # Install Bun using shell script as there's no official Azure task yet
-          - task: Bash@3
-            displayName: 'Install Bun'
-            inputs:
-              targetType: 'inline'
-              script: |
-                curl -fsSL https://bun.sh/install | bash
-                echo "##vso[task.prependpath]$HOME/.bun/bin"
-                
-          - task: Bash@3
-            displayName: 'Install Dependencies'
-            inputs:
-              targetType: 'inline'
-              script: |
-                cd $(CLIENT_PROJECTS_DIR)/Logistics.OfficeApp
-                bun install --force
-                
-          - task: Bash@3
-            displayName: 'Build Office App'
-            inputs:
-              targetType: 'inline'
-              script: |
-                cd $(CLIENT_PROJECTS_DIR)/Logistics.OfficeApp
-                bun run build
-                
-          - task: ArchiveFiles@2
-            displayName: 'Archive Office App Build'
-            inputs:
-              rootFolderOrFile: '$(CLIENT_PROJECTS_DIR)/Logistics.OfficeApp/dist'
-              includeRootFolder: false
-              archiveType: 'zip'
-              archiveFile: '$(Build.ArtifactStagingDirectory)/office-app.zip'
-            condition: succeeded()
-              
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Office App Artifacts'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'office-app'
-
       # Build MAUI Mobile App
       - job: 'BuildMauiApp'
         displayName: 'Build MAUI Mobile App'
@@ -248,21 +66,55 @@ stages:
             inputs:
               command: 'restore'
               projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
+
+          - task: PowerShell@2
+            displayName: 'Diagnostic: List resolved NuGet packages for DriverApp'
+            inputs:
+              targetType: 'inline'
+              script: |
+                dotnet --info
+                dotnet list "$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj" package --include-transitive
+                echo 'Searching for Xamarin.AndroidX.SavedState in global packages folder'
+                $pkgPath = (dotnet nuget locals global-packages --list) -replace 'global-packages:\s*',''
+                if (Test-Path $pkgPath) {
+                  Get-ChildItem -Path $pkgPath -Recurse -Filter 'Xamarin.AndroidX.SavedState*' -ErrorAction SilentlyContinue | Select-Object FullName -First 50
+                } else {
+                  echo "Global packages folder not found: $pkgPath"
+                }
               
           - task: DotNetCoreCLI@2
-            displayName: 'Build MAUI Driver App'
+            displayName: 'Build MAUI Driver App (AOT enabled)'
+            condition: eq(variables['enableAot'], 'true')
             inputs:
               command: 'build'
               projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
               arguments: '--configuration $(buildConfiguration) --no-restore'
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Build MAUI Driver App (AOT disabled - CI)'
+            condition: ne(variables['enableAot'], 'true')
+            inputs:
+              command: 'build'
+              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
+              arguments: '--configuration $(buildConfiguration) -p:RunAOTCompilation=false -p:AndroidEnableAot=false -p:AndroidEnableProfiledAot=false --no-restore'
               
           # Publish Android APK
           - task: DotNetCoreCLI@2
-            displayName: 'Publish Android APK'
+            displayName: 'Publish Android APK (AOT enabled)'
+            condition: eq(variables['enableAot'], 'true')
             inputs:
               command: 'publish'
               projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
               arguments: '--configuration $(buildConfiguration) --framework net9.0-android --output $(Build.ArtifactStagingDirectory)/android'
+              publishWebProjects: false
+
+          - task: DotNetCoreCLI@2
+            displayName: 'Publish Android APK (AOT disabled - CI)'
+            condition: ne(variables['enableAot'], 'true')
+            inputs:
+              command: 'publish'
+              projects: '$(CLIENT_PROJECTS_DIR)/Logistics.DriverApp/Logistics.DriverApp.csproj'
+              arguments: '--configuration $(buildConfiguration) --framework net9.0-android -p:RunAOTCompilation=false -p:AndroidEnableAot=false -p:AndroidEnableProfiledAot=false --output $(Build.ArtifactStagingDirectory)/android'
               publishWebProjects: false
               
           - task: PublishBuildArtifacts@1
@@ -272,71 +124,7 @@ stages:
               artifactName: 'mobile-app'
               
       # Build Docker Images
-      - job: 'BuildDockerImages'
-        displayName: 'Build Docker Images'
-        pool:
-          vmImage: $(vmImageName)
-        condition: eq(variables['buildDockerImages'], 'true')
-          
-        steps:
-          - checkout: self
-            fetchDepth: 1
-            
-          - task: Docker@2
-            displayName: 'Build API Docker Image'
-            inputs:
-              containerRegistry: # Configure this with your container registry service connection
-              repository: 'logistics-api'
-              command: 'build'
-              Dockerfile: 'src/Presentation/Logistics.API/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(Build.BuildId)
-                latest
-                
-          - task: Docker@2
-            displayName: 'Build Identity Server Docker Image'  
-            inputs:
-              containerRegistry: # Configure this with your container registry service connection
-              repository: 'logistics-identity'
-              command: 'build'
-              Dockerfile: 'src/Presentation/Logistics.IdentityServer/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(Build.BuildId)
-                latest
-                
-          - task: Docker@2
-            displayName: 'Build Admin App Docker Image'
-            inputs:
-              containerRegistry: # Configure this with your container registry service connection  
-              repository: 'logistics-admin'
-              command: 'build'
-              Dockerfile: 'src/Client/Logistics.AdminApp/Dockerfile'
-              buildContext: '.'
-              tags: |
-                $(Build.BuildId)
-                latest
-            condition: exists('src/Client/Logistics.AdminApp/Dockerfile')
-            
-          # Save Docker images as artifacts
-          - task: Docker@2
-            displayName: 'Save API Docker Image'
-            inputs:
-              command: 'save'
-              arguments: '-o $(Build.ArtifactStagingDirectory)/logistics-api.tar logistics-api:$(Build.BuildId)'
-              
-          - task: Docker@2
-            displayName: 'Save Identity Docker Image'
-            inputs:
-              command: 'save'
-              arguments: '-o $(Build.ArtifactStagingDirectory)/logistics-identity.tar logistics-identity:$(Build.BuildId)'
-              
-          - task: PublishBuildArtifacts@1
-            displayName: 'Publish Docker Images'
-            inputs:
-              pathToPublish: '$(Build.ArtifactStagingDirectory)'
-              artifactName: 'docker-images'
+      
 
   - stage: 'Test'
     displayName: 'Run Tests'
