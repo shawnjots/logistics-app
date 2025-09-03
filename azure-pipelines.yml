@@ -375,11 +375,6 @@ stages:
             artifact: "mobile-app"
             displayName: "Download Mobile App Artifacts"
 
-          - download: current
-            artifact: "docker-images"
-            displayName: "Download Docker Images"
-            condition: and(succeeded(), eq(variables['buildDockerImages'], 'true'))
-
           - task: ArchiveFiles@2
             displayName: "Create Complete Deployment Package"
             inputs:
