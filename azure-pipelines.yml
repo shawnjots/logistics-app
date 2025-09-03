@@ -370,7 +370,7 @@ stages:
           - download: current
             artifact: "office-app"
             displayName: "Download Office App Artifacts"
-            condition: succeeded('BuildOfficeApp')
+            condition: succeeded('Build')
 
           - download: current
             artifact: "mobile-app"
