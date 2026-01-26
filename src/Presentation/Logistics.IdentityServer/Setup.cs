@@ -78,6 +78,9 @@ internal static class Setup
             options.AddPolicy("DefaultCors", cors =>
             {
                 cors.WithOrigins(
+                    "https://127.0.0.1:7002",
+                    "https://127.0.0.1:7003",
+                    "*",
                         "https://clensonic.co.zw",
                         "https://*.clensonic.co.zw")
                     .SetIsOriginAllowedToAllowWildcardSubdomains()
